@@ -1,0 +1,25 @@
+{
+  "name": "kolia-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "hono": "^4.7.4",
+    "@hono/node-server": "^1.14.1",
+    "@supabase/supabase-js": "^2.49.1",
+    "stripe": "^17.6.0",
+    "zod": "^3.24.2",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "~5.7.3",
+    "@types/node": "^22.13.4"
+  },
+  "private": true
+}
