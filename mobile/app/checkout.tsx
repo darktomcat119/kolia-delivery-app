@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, MapPin, AlertCircle } from 'lucide-react-native';
+import { ArrowLeft, MapPin, AlertCircle, CreditCard } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { useConfirmPayment } from '@stripe/stripe-react-native';
 import { useCartStore } from '../src/stores/cartStore';
 import { useAuthStore } from '../src/stores/authStore';
 import { useLocationStore } from '../src/stores/locationStore';
@@ -33,6 +34,8 @@ export default function CheckoutScreen() {
   const { items, restaurantId, notes, getSubtotal, clearCart } = useCartStore();
   const { latitude, longitude } = useLocationStore();
   const { restaurants } = useRestaurantStore();
+
+  const { confirmPayment } = useConfirmPayment();
 
   const [orderType, setOrderType] = useState<OrderType>('delivery');
   const [loading, setLoading] = useState(false);
@@ -74,6 +77,7 @@ export default function CheckoutScreen() {
     setError('');
 
     try {
+      // 1. Create order on backend (gets Stripe client_secret)
       const payload: CreateOrderPayload = {
         restaurant_id: restaurantId,
         items: items.map((item) => ({
@@ -94,8 +98,24 @@ export default function CheckoutScreen() {
 
       const result = await api.post<CreateOrderResponse>('/api/orders', payload);
 
-      // In a full implementation, we'd handle Stripe payment here with result.client_secret
-      // For MVP, we navigate directly to confirmation
+      // 2. Confirm payment with Stripe
+      const { error: stripeError } = await confirmPayment(result.client_secret, {
+        paymentMethodType: 'Card',
+        paymentMethodData: {
+          billingDetails: {
+            email: user?.email,
+            name: user?.full_name ?? undefined,
+          },
+        },
+      });
+
+      if (stripeError) {
+        // Payment failed — order stays in temp state until webhook cancels it
+        setError(stripeError.message ?? t('checkout.paymentFailed'));
+        return;
+      }
+
+      // 3. Payment succeeded — navigate to confirmation
       clearCart();
       router.replace(`/order/${result.order_id}/confirmation`);
     } catch (err) {
@@ -458,15 +478,18 @@ export default function CheckoutScreen() {
           {loading ? (
             <ActivityIndicator color={COLORS.textOnPrimary} />
           ) : (
-            <Text
-              style={{
-                fontFamily: FONT_FAMILIES.bodySemibold,
-                fontSize: 16,
-                color: COLORS.textOnPrimary,
-              }}
-            >
-              {t('checkout.placeOrder')} · {formatPrice(total)}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <CreditCard size={18} color={COLORS.textOnPrimary} />
+              <Text
+                style={{
+                  fontFamily: FONT_FAMILIES.bodySemibold,
+                  fontSize: 16,
+                  color: COLORS.textOnPrimary,
+                }}
+              >
+                {t('checkout.payWithCard')} · {formatPrice(total)}
+              </Text>
+            </View>
           )}
         </Pressable>
       </View>

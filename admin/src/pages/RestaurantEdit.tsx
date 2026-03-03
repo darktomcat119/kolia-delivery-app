@@ -7,6 +7,10 @@ import type { Restaurant, CuisineType } from '../lib/types';
 import { CUISINE_LABELS } from '../lib/types';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_LABELS: Record<string, string> = {
+  monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi', thursday: 'Jeudi',
+  friday: 'Vendredi', saturday: 'Samedi', sunday: 'Dimanche',
+};
 const CUISINE_OPTIONS = Object.entries(CUISINE_LABELS) as [CuisineType, string][];
 
 const EMPTY_RESTAURANT: Partial<Restaurant> = {
@@ -102,7 +106,7 @@ export function RestaurantEdit() {
       }
       navigate('/restaurants');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : 'Échec de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -111,7 +115,7 @@ export function RestaurantEdit() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Loading...</div>
+        <div className="text-[#6B6560] font-body">Chargement...</div>
       </div>
     );
   }
@@ -123,10 +127,10 @@ export function RestaurantEdit() {
           onClick={() => navigate('/restaurants')}
           className="text-[#6B6560] hover:text-[#1A1A1A] transition-colors"
         >
-          <ArrowLeft size={18} className="inline -mt-0.5" /> Back
+          <ArrowLeft size={18} className="inline -mt-0.5" /> Retour
         </button>
         <h1 className="text-2xl font-semibold font-body">
-          {isNew ? 'New Restaurant' : 'Edit Restaurant'}
+          {isNew ? 'Nouveau restaurant' : 'Modifier le restaurant'}
         </h1>
       </div>
 
@@ -139,11 +143,11 @@ export function RestaurantEdit() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Basic Info</h2>
+          <h2 className="text-lg font-semibold font-body mb-4">Informations générales</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Name *
+                Nom *
               </label>
               <input
                 type="text"
@@ -166,7 +170,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Cuisine Type *
+                Type de cuisine *
               </label>
               <select
                 value={form.cuisine_type ?? 'west_african'}
@@ -184,7 +188,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Phone
+                Téléphone
               </label>
               <input
                 type="text"
@@ -198,11 +202,11 @@ export function RestaurantEdit() {
 
         {/* Location */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Location</h2>
+          <h2 className="text-lg font-semibold font-body mb-4">Adresse & Localisation</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Address *
+                Adresse *
               </label>
               <input
                 type="text"
@@ -214,7 +218,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                City *
+                Ville *
               </label>
               <input
                 type="text"
@@ -226,7 +230,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Country (2-letter code) *
+                Pays (code à 2 lettres) *
               </label>
               <input
                 type="text"
@@ -269,12 +273,12 @@ export function RestaurantEdit() {
         {/* Delivery Settings */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
           <h2 className="text-lg font-semibold font-body mb-4">
-            Delivery Settings
+            Paramètres de livraison
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Delivery Fee (€)
+                Frais de livraison (€)
               </label>
               <input
                 type="number"
@@ -289,7 +293,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Minimum Order (€)
+                Commande minimum (€)
               </label>
               <input
                 type="number"
@@ -304,7 +308,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Est. Min (minutes)
+                Délai min. (minutes)
               </label>
               <input
                 type="number"
@@ -318,7 +322,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Est. Max (minutes)
+                Délai max. (minutes)
               </label>
               <input
                 type="number"
@@ -332,7 +336,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Delivery Radius (km)
+                Rayon de livraison (km)
               </label>
               <input
                 type="number"
@@ -356,7 +360,7 @@ export function RestaurantEdit() {
                 className="w-4 h-4 rounded accent-primary"
               />
               <label htmlFor="pickup" className="text-sm font-body">
-                Pickup Available
+                Retrait disponible
               </label>
             </div>
           </div>
@@ -368,7 +372,7 @@ export function RestaurantEdit() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Cover Image URL
+                URL de l'image de couverture
               </label>
               <input
                 type="url"
@@ -380,7 +384,7 @@ export function RestaurantEdit() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Logo URL
+                URL du logo
               </label>
               <input
                 type="url"
@@ -396,7 +400,7 @@ export function RestaurantEdit() {
         {/* Opening Hours */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
           <h2 className="text-lg font-semibold font-body mb-4">
-            Opening Hours
+            Horaires d'ouverture
           </h2>
           <div className="space-y-3">
             {DAYS.map((day) => {
@@ -405,8 +409,8 @@ export function RestaurantEdit() {
 
               return (
                 <div key={day} className="flex items-center gap-4">
-                  <span className="w-24 text-sm font-body capitalize font-medium">
-                    {day}
+                  <span className="w-24 text-sm font-body font-medium">
+                    {DAY_LABELS[day] ?? day}
                   </span>
                   <button
                     type="button"
@@ -417,7 +421,7 @@ export function RestaurantEdit() {
                         : 'bg-[#E8F9EE] text-[#16A34A]'
                     }`}
                   >
-                    {isClosed ? 'Closed' : 'Open'}
+                    {isClosed ? 'Fermé' : 'Ouvert'}
                   </button>
                   {!isClosed && (
                     <>
@@ -429,7 +433,7 @@ export function RestaurantEdit() {
                         }
                         className="px-3 py-1.5 rounded-lg border border-border font-body text-sm"
                       />
-                      <span className="text-sm text-[#6B6560]">to</span>
+                      <span className="text-sm text-[#6B6560]">à</span>
                       <input
                         type="time"
                         value={hours.close}
@@ -453,14 +457,14 @@ export function RestaurantEdit() {
             disabled={saving}
             className="px-8 py-3 rounded-xl bg-primary text-white font-body font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
           >
-            {saving ? 'Saving...' : isNew ? 'Create Restaurant' : 'Save Changes'}
+            {saving ? 'Enregistrement...' : isNew ? 'Créer le restaurant' : 'Enregistrer'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/restaurants')}
             className="px-8 py-3 rounded-xl border border-border text-sm font-body font-medium hover:bg-surface-hover transition-colors"
           >
-            Cancel
+            Annuler
           </button>
         </div>
       </form>

@@ -19,7 +19,7 @@ export function Login() {
       await signIn(email, password);
       navigate('/dashboard');
     } catch {
-      setError('Invalid email or password');
+      setError('Email ou mot de passe incorrect');
     } finally {
       setLoading(false);
     }
@@ -31,7 +31,7 @@ export function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="font-display text-4xl text-primary mb-2">Kolia</h1>
-          <p className="text-[#6B6560] font-body">Admin Panel</p>
+          <p className="text-[#6B6560] font-body">Panneau d'administration</p>
         </div>
 
         {/* Form */}
@@ -39,7 +39,7 @@ export function Login() {
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl p-8 shadow-sm border border-border-light"
         >
-          <h2 className="text-xl font-semibold font-body mb-6">Sign In</h2>
+          <h2 className="text-xl font-semibold font-body mb-6">Connexion</h2>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-[#FDE8E8] text-[#DC2626] text-sm font-body">
@@ -50,7 +50,7 @@ export function Login() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Email
+                E-mail
               </label>
               <input
                 type="email"
@@ -64,7 +64,7 @@ export function Login() {
 
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Password
+                Mot de passe
               </label>
               <input
                 type="password"
@@ -81,7 +81,7 @@ export function Login() {
               disabled={loading}
               className="w-full py-3 rounded-xl bg-primary text-white font-body font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Connexion...' : 'Se connecter'}
             </button>
           </div>
         </form>

@@ -162,7 +162,18 @@
     "phone": "Phone",
     "languagePortuguese": "Português",
     "languageEnglish": "English",
-    "languageFrench": "Français"
+    "languageFrench": "Français",
+    "addressPlaceholder": "Enter your delivery address",
+    "addressSaved": "Address saved",
+    "locatingAddress": "Locating...",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "passwordChanged": "Password updated successfully",
+    "passwordChangeFailed": "Failed to update password",
+    "notificationsEnabled": "Enabled",
+    "notificationsDisabled": "Disabled",
+    "notificationsPermissionDenied": "Notification permission denied. Enable in device settings."
   },
   "dietary": {
     "halal": "Halal",

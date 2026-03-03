@@ -43,7 +43,7 @@ export function Restaurants() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Supprimer « ${name} » ? Cette action est irréversible.`)) return;
 
     try {
       await api.delete(`/api/admin/restaurants/${id}`);
@@ -56,7 +56,7 @@ export function Restaurants() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Loading restaurants...</div>
+        <div className="text-[#6B6560] font-body">Chargement des restaurants...</div>
       </div>
     );
   }
@@ -69,18 +69,18 @@ export function Restaurants() {
           onClick={() => navigate('/restaurants/new')}
           className="px-5 py-2.5 rounded-xl bg-primary text-white font-body font-medium text-sm hover:bg-primary-dark transition-colors"
         >
-          <Plus size={16} className="inline -mt-0.5" /> Add Restaurant
+          <Plus size={16} className="inline -mt-0.5" /> Ajouter un restaurant
         </button>
       </div>
 
       {restaurants.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-border-light">
-          <p className="text-[#6B6560] font-body mb-4">No restaurants yet</p>
+          <p className="text-[#6B6560] font-body mb-4">Aucun restaurant</p>
           <button
             onClick={() => navigate('/restaurants/new')}
             className="px-5 py-2.5 rounded-xl bg-primary text-white font-body font-medium text-sm hover:bg-primary-dark transition-colors"
           >
-            Add Your First Restaurant
+            Ajouter votre premier restaurant
           </button>
         </div>
       ) : (
@@ -111,7 +111,7 @@ export function Restaurants() {
                         : 'bg-[#FDE8E8] text-[#DC2626]'
                     }`}
                   >
-                    {restaurant.is_active ? 'Active' : 'Inactive'}
+                    {restaurant.is_active ? 'Actif' : 'Inactif'}
                   </button>
                 </div>
               </div>
@@ -125,7 +125,7 @@ export function Restaurants() {
                   {CUISINE_LABELS[restaurant.cuisine_type]} · {restaurant.city}
                 </p>
                 <div className="text-xs text-[#A39E98] font-body mb-4">
-                  Min. €{Number(restaurant.minimum_order).toFixed(2)} · Fee €
+                  Min. €{Number(restaurant.minimum_order).toFixed(2)} · Livraison €
                   {Number(restaurant.delivery_fee).toFixed(2)} ·{' '}
                   {restaurant.estimated_delivery_min}–
                   {restaurant.estimated_delivery_max} min
@@ -137,7 +137,7 @@ export function Restaurants() {
                     onClick={() => navigate(`/restaurants/${restaurant.id}`)}
                     className="flex-1 py-2 rounded-xl border border-border text-sm font-body font-medium hover:bg-surface-hover transition-colors"
                   >
-                    Edit
+                    Modifier
                   </button>
                   <button
                     onClick={() =>

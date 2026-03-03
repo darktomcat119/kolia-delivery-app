@@ -56,14 +56,14 @@ export function Orders() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Loading orders...</div>
+        <div className="text-[#6B6560] font-body">Chargement des commandes...</div>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold font-body mb-6">Orders</h1>
+      <h1 className="text-2xl font-semibold font-body mb-6">Commandes</h1>
 
       {/* Status Filters */}
       <div className="flex flex-wrap gap-2 mb-6">
@@ -77,7 +77,7 @@ export function Orders() {
                 : 'bg-white border border-border text-[#6B6560] hover:bg-surface-hover'
             }`}
           >
-            {status === 'all' ? 'All' : ORDER_STATUS_LABELS[status]}
+            {status === 'all' ? 'Toutes' : ORDER_STATUS_LABELS[status]}
             {status !== 'all' && (
               <span className="ml-1.5 text-xs opacity-70">
                 ({orders.filter((o) => o.status === status).length})
@@ -91,7 +91,7 @@ export function Orders() {
       <div className="bg-white rounded-2xl shadow-sm border border-border-light">
         {filtered.length === 0 ? (
           <div className="p-12 text-center text-[#6B6560] font-body">
-            No orders found
+            Aucune commande trouvée
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -99,22 +99,22 @@ export function Orders() {
               <thead>
                 <tr className="border-b border-border-light">
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Order #
+                    N° commande
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Customer
+                    Client
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                     Restaurant
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Items
+                    Articles
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                     Total
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Status
+                    Statut
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                     Date
@@ -135,13 +135,13 @@ export function Orders() {
                       {order.order_number}
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {order.profile?.full_name ?? 'Unknown'}
+                      {order.profile?.full_name ?? 'Inconnu'}
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {order.restaurant?.name ?? 'Unknown'}
+                      {order.restaurant?.name ?? 'Inconnu'}
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {order.order_items?.length ?? 0} items
+                      {order.order_items?.length ?? 0} article(s)
                     </td>
                     <td className="p-4 text-sm font-body font-medium">
                       €{Number(order.total).toFixed(2)}
@@ -150,7 +150,7 @@ export function Orders() {
                       <StatusBadge status={order.status} />
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {new Date(order.created_at).toLocaleDateString()}
+                      {new Date(order.created_at).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="p-4" onClick={(e) => e.stopPropagation()}>
                       <StatusDropdown

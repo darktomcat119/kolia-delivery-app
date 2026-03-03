@@ -4,8 +4,8 @@ import { useAuth } from '../lib/auth';
 import type { LucideIcon } from 'lucide-react';
 
 const NAV_ITEMS: { path: string; label: string; icon: LucideIcon }[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/orders', label: 'Orders', icon: Package },
+  { path: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
+  { path: '/orders', label: 'Commandes', icon: Package },
   { path: '/restaurants', label: 'Restaurants', icon: UtensilsCrossed },
 ];
 
@@ -55,7 +55,7 @@ export function Sidebar() {
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-400 transition-colors"
         >
           <LogOut size={14} />
-          Log out
+          Déconnexion
         </button>
       </div>
     </aside>

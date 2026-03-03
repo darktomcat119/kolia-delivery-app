@@ -116,7 +116,7 @@ export function MenuEditor() {
   const handleDeleteCategory = async (categoryId: string) => {
     const catItems = items.filter((i) => i.category_id === categoryId);
     if (catItems.length > 0) {
-      if (!window.confirm(`This category has ${catItems.length} items. Delete all?`))
+      if (!window.confirm(`Cette catégorie contient ${catItems.length} plat(s). Tout supprimer ?`))
         return;
     }
 
@@ -169,7 +169,7 @@ export function MenuEditor() {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (!window.confirm('Delete this item?')) return;
+    if (!window.confirm('Supprimer ce plat ?')) return;
 
     try {
       await api.delete(`/api/admin/items/${itemId}`);
@@ -222,7 +222,7 @@ export function MenuEditor() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Loading menu...</div>
+        <div className="text-[#6B6560] font-body">Chargement du menu...</div>
       </div>
     );
   }
@@ -234,7 +234,7 @@ export function MenuEditor() {
           onClick={() => navigate('/restaurants')}
           className="text-[#6B6560] hover:text-[#1A1A1A] transition-colors"
         >
-          <ArrowLeft size={18} className="inline -mt-0.5" /> Back
+          <ArrowLeft size={18} className="inline -mt-0.5" /> Retour
         </button>
         <h1 className="text-2xl font-semibold font-body">
           Menu — {restaurant?.name}
@@ -246,7 +246,7 @@ export function MenuEditor() {
         <div className="w-64 shrink-0">
           <div className="bg-white rounded-2xl shadow-sm border border-border-light p-4">
             <h3 className="text-sm font-medium text-[#6B6560] font-body mb-3">
-              Categories
+              Catégories
             </h3>
 
             <div className="space-y-1 mb-4">
@@ -314,7 +314,7 @@ export function MenuEditor() {
                 type="text"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="New category"
+                placeholder="Nouvelle catégorie"
                 className="flex-1 px-3 py-2 text-sm border border-border rounded-lg font-body focus:outline-none focus:border-primary"
               />
               <button
@@ -332,7 +332,7 @@ export function MenuEditor() {
           {!activeCategory ? (
             <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-border-light">
               <p className="text-[#6B6560] font-body">
-                Create a category to start adding menu items
+                Créez une catégorie pour commencer à ajouter des plats
               </p>
             </div>
           ) : (
@@ -349,7 +349,7 @@ export function MenuEditor() {
                   }}
                   className="px-4 py-2 rounded-xl bg-primary text-white font-body font-medium text-sm hover:bg-primary-dark transition-colors"
                 >
-                  <Plus size={16} className="inline -mt-0.5" /> Add Item
+                  <Plus size={16} className="inline -mt-0.5" /> Ajouter un plat
                 </button>
               </div>
 
@@ -357,7 +357,7 @@ export function MenuEditor() {
               {showItemForm && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light mb-6">
                   <h3 className="text-base font-semibold font-body mb-4">
-                    {editingItem ? 'Edit Item' : 'New Item'}
+                    {editingItem ? 'Modifier le plat' : 'Nouveau plat'}
                   </h3>
                   <form
                     onSubmit={editingItem ? handleUpdateItem : handleAddItem}
@@ -366,7 +366,7 @@ export function MenuEditor() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2">
                         <label className="block text-sm font-medium text-[#6B6560] font-body mb-1">
-                          Name *
+                          Nom *
                         </label>
                         <input
                           type="text"
@@ -396,7 +396,7 @@ export function MenuEditor() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-[#6B6560] font-body mb-1">
-                          Price (€) *
+                          Prix (€) *
                         </label>
                         <input
                           type="number"
@@ -415,7 +415,7 @@ export function MenuEditor() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-[#6B6560] font-body mb-1">
-                          Image URL
+                          URL de l'image
                         </label>
                         <input
                           type="url"
@@ -435,7 +435,7 @@ export function MenuEditor() {
                     {/* Dietary Tags */}
                     <div>
                       <label className="block text-sm font-medium text-[#6B6560] font-body mb-2">
-                        Dietary Tags
+                        Tags alimentaires
                       </label>
                       <div className="flex flex-wrap gap-2">
                         {ALL_DIETARY_TAGS.map((tag) => (
@@ -461,7 +461,7 @@ export function MenuEditor() {
                         type="submit"
                         className="px-6 py-2.5 rounded-xl bg-primary text-white font-body font-medium text-sm hover:bg-primary-dark transition-colors"
                       >
-                        {editingItem ? 'Update Item' : 'Add Item'}
+                        {editingItem ? 'Mettre à jour' : 'Ajouter'}
                       </button>
                       <button
                         type="button"
@@ -472,7 +472,7 @@ export function MenuEditor() {
                         }}
                         className="px-6 py-2.5 rounded-xl border border-border text-sm font-body hover:bg-surface-hover transition-colors"
                       >
-                        Cancel
+                        Annuler
                       </button>
                     </div>
                   </form>
@@ -483,7 +483,7 @@ export function MenuEditor() {
               {activeItems.length === 0 ? (
                 <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-border-light">
                   <p className="text-[#6B6560] font-body">
-                    No items in this category yet
+                    Aucun plat dans cette catégorie
                   </p>
                 </div>
               ) : (
@@ -492,16 +492,16 @@ export function MenuEditor() {
                     <thead>
                       <tr className="border-b border-border-light">
                         <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                          Name
+                          Nom
                         </th>
                         <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                          Price
+                          Prix
                         </th>
                         <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                           Tags
                         </th>
                         <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                          Available
+                          Disponible
                         </th>
                         <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                           Actions
@@ -550,7 +550,7 @@ export function MenuEditor() {
                                   : 'bg-[#FDE8E8] text-[#DC2626]'
                               }`}
                             >
-                              {item.is_available ? 'Yes' : 'No'}
+                              {item.is_available ? 'Oui' : 'Non'}
                             </button>
                           </td>
                           <td className="p-4">
@@ -559,13 +559,13 @@ export function MenuEditor() {
                                 onClick={() => startEditItem(item)}
                                 className="text-sm text-primary hover:underline font-body"
                               >
-                                Edit
+                                Modifier
                               </button>
                               <button
                                 onClick={() => handleDeleteItem(item.id)}
                                 className="text-sm text-[#DC2626] hover:underline font-body"
                               >
-                                Delete
+                                Supprimer
                               </button>
                             </div>
                           </td>

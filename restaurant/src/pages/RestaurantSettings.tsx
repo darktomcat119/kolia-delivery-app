@@ -5,6 +5,10 @@ import type { Restaurant, CuisineType } from '../lib/types';
 import { CUISINE_LABELS } from '../lib/types';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DAY_LABELS: Record<string, string> = {
+  monday: 'Lundi', tuesday: 'Mardi', wednesday: 'Mercredi', thursday: 'Jeudi',
+  friday: 'Vendredi', saturday: 'Samedi', sunday: 'Dimanche',
+};
 
 export function RestaurantSettings() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -89,10 +93,10 @@ export function RestaurantSettings() {
         opening_hours: openingHours,
       });
       setRestaurant(updated);
-      setSuccess('Settings saved successfully');
+      setSuccess('Paramètres enregistrés avec succès');
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save');
+      setError(err instanceof Error ? err.message : 'Échec de la sauvegarde');
     } finally {
       setSaving(false);
     }
@@ -119,7 +123,7 @@ export function RestaurantSettings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Loading settings...</div>
+        <div className="text-[#6B6560] font-body">Chargement...</div>
       </div>
     );
   }
@@ -128,9 +132,9 @@ export function RestaurantSettings() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-[#6B6560] font-body mb-2">No restaurant found</p>
+          <p className="text-[#6B6560] font-body mb-2">Aucun restaurant trouvé</p>
           <p className="text-sm text-[#9C9690] font-body">
-            Contact the admin to assign a restaurant to your account.
+            Contactez l'administrateur pour associer un restaurant à votre compte.
           </p>
         </div>
       </div>
@@ -140,14 +144,14 @@ export function RestaurantSettings() {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold font-body">Restaurant Settings</h1>
+        <h1 className="text-2xl font-semibold font-body">Paramètres du restaurant</h1>
         <div className="flex items-center gap-3">
           <span
             className={`inline-flex px-3 py-1 rounded-full text-xs font-medium font-body ${
               isActive ? 'bg-[#E8F9EE] text-[#16A34A]' : 'bg-[#FDE8E8] text-[#DC2626]'
             }`}
           >
-            {isActive ? 'Active' : 'Inactive'}
+            {isActive ? 'Actif' : 'Inactif'}
           </span>
         </div>
       </div>
@@ -167,11 +171,11 @@ export function RestaurantSettings() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Basic Information</h2>
+          <h2 className="text-lg font-semibold font-body mb-4">Informations générales</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Restaurant Name
+                Nom du restaurant
               </label>
               <input
                 type="text"
@@ -183,7 +187,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Cuisine Type
+                Type de cuisine
               </label>
               <select
                 value={cuisineType}
@@ -213,11 +217,11 @@ export function RestaurantSettings() {
 
         {/* Location */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Location & Contact</h2>
+          <h2 className="text-lg font-semibold font-body mb-4">Adresse & Contact</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Address
+                Adresse
               </label>
               <input
                 type="text"
@@ -229,7 +233,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                City
+                Ville
               </label>
               <input
                 type="text"
@@ -241,7 +245,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Phone
+                Téléphone
               </label>
               <input
                 type="tel"
@@ -256,11 +260,11 @@ export function RestaurantSettings() {
 
         {/* Delivery */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Delivery Settings</h2>
+          <h2 className="text-lg font-semibold font-body mb-4">Paramètres de livraison</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Delivery Fee (€)
+                Frais de livraison (€)
               </label>
               <input
                 type="number"
@@ -273,7 +277,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Minimum Order (€)
+                Commande minimum (€)
               </label>
               <input
                 type="number"
@@ -286,7 +290,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Delivery Radius (km)
+                Rayon de livraison (km)
               </label>
               <input
                 type="number"
@@ -299,7 +303,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Est. Delivery Min (min)
+                Délai min. (min)
               </label>
               <input
                 type="number"
@@ -311,7 +315,7 @@ export function RestaurantSettings() {
             </div>
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Est. Delivery Max (min)
+                Délai max. (min)
               </label>
               <input
                 type="number"
@@ -330,7 +334,7 @@ export function RestaurantSettings() {
                   className="sr-only peer"
                 />
                 <div className="w-10 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                <span className="ms-2 text-sm font-body text-[#6B6560]">Pickup Available</span>
+                <span className="ms-2 text-sm font-body text-[#6B6560]">Retrait disponible</span>
               </label>
             </div>
           </div>
@@ -340,9 +344,9 @@ export function RestaurantSettings() {
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold font-body">Restaurant Status</h2>
+              <h2 className="text-lg font-semibold font-body">Statut du restaurant</h2>
               <p className="text-sm text-[#6B6560] font-body mt-1">
-                When inactive, your restaurant won't appear in the app.
+                Lorsqu'il est inactif, votre restaurant n'apparaît pas dans l'application.
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -359,7 +363,7 @@ export function RestaurantSettings() {
 
         {/* Opening Hours */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Opening Hours</h2>
+          <h2 className="text-lg font-semibold font-body mb-4">Horaires d'ouverture</h2>
           <div className="space-y-3">
             {DAYS.map((day) => (
               <div key={day} className="flex items-center gap-4">
@@ -372,7 +376,7 @@ export function RestaurantSettings() {
                   />
                   <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                 </label>
-                <span className="w-24 text-sm font-body capitalize">{day}</span>
+                <span className="w-24 text-sm font-body">{DAY_LABELS[day]}</span>
                 {openingHours[day] ? (
                   <div className="flex items-center gap-2">
                     <input
@@ -381,7 +385,7 @@ export function RestaurantSettings() {
                       onChange={(e) => updateHours(day, 'open', e.target.value)}
                       className="px-3 py-1.5 rounded-lg border border-border bg-white font-body text-sm focus:outline-none focus:border-primary"
                     />
-                    <span className="text-[#6B6560] text-sm">to</span>
+                    <span className="text-[#6B6560] text-sm">à</span>
                     <input
                       type="time"
                       value={openingHours[day]?.close ?? '22:00'}
@@ -390,7 +394,7 @@ export function RestaurantSettings() {
                     />
                   </div>
                 ) : (
-                  <span className="text-sm text-[#9C9690] font-body">Closed</span>
+                  <span className="text-sm text-[#9C9690] font-body">Fermé</span>
                 )}
               </div>
             ))}
@@ -409,7 +413,7 @@ export function RestaurantSettings() {
             ) : (
               <Save size={16} />
             )}
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
       </form>

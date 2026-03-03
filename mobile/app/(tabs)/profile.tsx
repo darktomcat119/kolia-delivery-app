@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  Alert,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  Switch,
+  Modal,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   MapPin,
@@ -8,12 +18,25 @@ import {
   Lock,
   LogOut,
   ChevronRight,
+  X,
+  Navigation,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { useAuthStore } from '../../src/stores/authStore';
+import { useLocationStore } from '../../src/stores/locationStore';
+import { getCurrentLocation } from '../../src/services/location';
+import { registerForPushNotifications } from '../../src/services/notifications';
+import { supabase } from '../../src/lib/supabase';
 import { LanguageSelector } from '../../src/components/common/LanguageSelector';
-import { COLORS, FONT_FAMILIES, FONT_SIZES } from '../../src/config/constants';
+import {
+  COLORS,
+  FONT_FAMILIES,
+  FONT_SIZES,
+  BORDER_RADIUS,
+  SPACING,
+} from '../../src/config/constants';
 
 interface SettingsRowProps {
   icon: React.ReactNode;
@@ -21,6 +44,7 @@ interface SettingsRowProps {
   value?: string;
   onPress: () => void;
   isDestructive?: boolean;
+  rightElement?: React.ReactNode;
 }
 
 function SettingsRow({
@@ -29,6 +53,7 @@ function SettingsRow({
   value,
   onPress,
   isDestructive,
+  rightElement,
 }: SettingsRowProps) {
   return (
     <Pressable
@@ -65,16 +90,437 @@ function SettingsRow({
           {value}
         </Text>
       )}
-      <ChevronRight size={20} color={COLORS.textTertiary} />
+      {rightElement ?? <ChevronRight size={20} color={COLORS.textTertiary} />}
     </Pressable>
   );
 }
 
+// ─── Address Modal ──────────────────────────────────────────
+function AddressModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
+  const locationAddress = useLocationStore((s) => s.address);
+  const locationLat = useLocationStore((s) => s.latitude);
+  const locationLng = useLocationStore((s) => s.longitude);
+  const locationLoading = useLocationStore((s) => s.isLoading);
+
+  const [address, setAddress] = useState(user?.address ?? '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      setAddress(user?.address ?? '');
+    }
+  }, [visible, user?.address]);
+
+  // When location service provides a new address, use it
+  useEffect(() => {
+    if (locationAddress && locationLat && locationLng) {
+      setAddress(locationAddress);
+    }
+  }, [locationAddress, locationLat, locationLng]);
+
+  const handleUseLocation = () => {
+    getCurrentLocation();
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const data: Record<string, unknown> = { address };
+      if (locationLat && locationLng && address === locationAddress) {
+        data.latitude = locationLat;
+        data.longitude = locationLng;
+      }
+      await updateProfile(data as Parameters<typeof updateProfile>[0]);
+      Alert.alert(t('profile.addressSaved'));
+      onClose();
+    } catch {
+      Alert.alert(t('common.error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: COLORS.overlay,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: COLORS.surface,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            padding: SPACING.lg,
+            paddingBottom: 40,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: SPACING.lg,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: FONT_FAMILIES.bodySemibold,
+                fontSize: FONT_SIZES['2xl'],
+                color: COLORS.textPrimary,
+              }}
+            >
+              {t('profile.deliveryAddress')}
+            </Text>
+            <Pressable onPress={onClose}>
+              <X size={24} color={COLORS.textSecondary} />
+            </Pressable>
+          </View>
+
+          {/* Address input */}
+          <TextInput
+            value={address}
+            onChangeText={setAddress}
+            placeholder={t('profile.addressPlaceholder')}
+            placeholderTextColor={COLORS.textTertiary}
+            multiline
+            style={{
+              fontFamily: FONT_FAMILIES.body,
+              fontSize: 16,
+              color: COLORS.textPrimary,
+              backgroundColor: COLORS.background,
+              borderRadius: BORDER_RADIUS.input,
+              padding: SPACING.base,
+              minHeight: 80,
+              textAlignVertical: 'top',
+              borderWidth: 1,
+              borderColor: COLORS.border,
+            }}
+          />
+
+          {/* Use current location */}
+          <Pressable
+            onPress={handleUseLocation}
+            disabled={locationLoading}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: SPACING.md,
+              paddingVertical: SPACING.sm,
+            }}
+          >
+            {locationLoading ? (
+              <ActivityIndicator
+                size="small"
+                color={COLORS.primary}
+                style={{ marginRight: 8 }}
+              />
+            ) : (
+              <Navigation
+                size={18}
+                color={COLORS.primary}
+                style={{ marginRight: 8 }}
+              />
+            )}
+            <Text
+              style={{
+                fontFamily: FONT_FAMILIES.bodyMedium,
+                fontSize: 14,
+                color: COLORS.primary,
+              }}
+            >
+              {locationLoading
+                ? t('profile.locatingAddress')
+                : t('profile.useCurrentLocation')}
+            </Text>
+          </Pressable>
+
+          {/* Save button */}
+          <Pressable
+            onPress={handleSave}
+            disabled={saving || !address.trim()}
+            style={{
+              backgroundColor:
+                saving || !address.trim()
+                  ? COLORS.textTertiary
+                  : COLORS.primary,
+              borderRadius: BORDER_RADIUS.button,
+              paddingVertical: 14,
+              alignItems: 'center',
+              marginTop: SPACING.lg,
+            }}
+          >
+            {saving ? (
+              <ActivityIndicator color={COLORS.textOnPrimary} />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: FONT_FAMILIES.bodySemibold,
+                  fontSize: 16,
+                  color: COLORS.textOnPrimary,
+                }}
+              >
+                {t('profile.saveChanges')}
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Password Modal ─────────────────────────────────────────
+function PasswordModal({
+  visible,
+  onClose,
+}: {
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (visible) {
+      setNewPassword('');
+      setConfirmPassword('');
+      setError('');
+    }
+  }, [visible]);
+
+  const handleSave = async () => {
+    setError('');
+
+    if (newPassword.length < 6) {
+      setError(t('auth.errors.passwordMin'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError(t('auth.errors.passwordMismatch'));
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      if (updateError) throw updateError;
+      Alert.alert(t('profile.passwordChanged'));
+      onClose();
+    } catch {
+      setError(t('profile.passwordChangeFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: COLORS.overlay,
+          justifyContent: 'flex-end',
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: COLORS.surface,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            padding: SPACING.lg,
+            paddingBottom: 40,
+          }}
+        >
+          {/* Header */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: SPACING.lg,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: FONT_FAMILIES.bodySemibold,
+                fontSize: FONT_SIZES['2xl'],
+                color: COLORS.textPrimary,
+              }}
+            >
+              {t('profile.changePassword')}
+            </Text>
+            <Pressable onPress={onClose}>
+              <X size={24} color={COLORS.textSecondary} />
+            </Pressable>
+          </View>
+
+          {/* New password */}
+          <Text
+            style={{
+              fontFamily: FONT_FAMILIES.bodyMedium,
+              fontSize: 14,
+              color: COLORS.textSecondary,
+              marginBottom: 6,
+            }}
+          >
+            {t('profile.newPassword')}
+          </Text>
+          <TextInput
+            value={newPassword}
+            onChangeText={setNewPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            style={{
+              fontFamily: FONT_FAMILIES.body,
+              fontSize: 16,
+              color: COLORS.textPrimary,
+              backgroundColor: COLORS.background,
+              borderRadius: BORDER_RADIUS.input,
+              padding: SPACING.base,
+              borderWidth: 1,
+              borderColor: COLORS.border,
+              marginBottom: SPACING.md,
+            }}
+          />
+
+          {/* Confirm password */}
+          <Text
+            style={{
+              fontFamily: FONT_FAMILIES.bodyMedium,
+              fontSize: 14,
+              color: COLORS.textSecondary,
+              marginBottom: 6,
+            }}
+          >
+            {t('profile.confirmNewPassword')}
+          </Text>
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            style={{
+              fontFamily: FONT_FAMILIES.body,
+              fontSize: 16,
+              color: COLORS.textPrimary,
+              backgroundColor: COLORS.background,
+              borderRadius: BORDER_RADIUS.input,
+              padding: SPACING.base,
+              borderWidth: 1,
+              borderColor: COLORS.border,
+            }}
+          />
+
+          {/* Error */}
+          {error ? (
+            <Text
+              style={{
+                fontFamily: FONT_FAMILIES.body,
+                fontSize: 14,
+                color: COLORS.error,
+                marginTop: SPACING.sm,
+              }}
+            >
+              {error}
+            </Text>
+          ) : null}
+
+          {/* Save button */}
+          <Pressable
+            onPress={handleSave}
+            disabled={saving || !newPassword || !confirmPassword}
+            style={{
+              backgroundColor:
+                saving || !newPassword || !confirmPassword
+                  ? COLORS.textTertiary
+                  : COLORS.primary,
+              borderRadius: BORDER_RADIUS.button,
+              paddingVertical: 14,
+              alignItems: 'center',
+              marginTop: SPACING.lg,
+            }}
+          >
+            {saving ? (
+              <ActivityIndicator color={COLORS.textOnPrimary} />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: FONT_FAMILIES.bodySemibold,
+                  fontSize: 16,
+                  color: COLORS.textOnPrimary,
+                }}
+              >
+                {t('profile.saveChanges')}
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Main Profile Screen ────────────────────────────────────
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const signOut = useAuthStore((s) => s.signOut);
   const [showLanguage, setShowLanguage] = useState(false);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    Notifications.getPermissionsAsync().then(({ status }) => {
+      setNotificationsEnabled(status === 'granted');
+    });
+  }, []);
+
+  const handleToggleNotifications = async () => {
+    setNotifLoading(true);
+    try {
+      if (notificationsEnabled) {
+        // Can't programmatically revoke — inform user
+        Alert.alert(
+          t('profile.notifications'),
+          t('profile.notificationsPermissionDenied'),
+        );
+      } else {
+        const token = await registerForPushNotifications();
+        if (token) {
+          setNotificationsEnabled(true);
+        } else {
+          Alert.alert(
+            t('profile.notifications'),
+            t('profile.notificationsPermissionDenied'),
+          );
+        }
+      }
+    } finally {
+      setNotifLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(t('auth.logoutConfirmTitle'), t('auth.logoutConfirmMessage'), [
@@ -99,10 +545,12 @@ export default function ProfileScreen() {
         .slice(0, 2)
     : '??';
 
-  const currentLanguage =
-    i18n.language === 'pt'
-      ? t('profile.languagePortuguese')
-      : t('profile.languageEnglish');
+  const languageLabels: Record<string, string> = {
+    pt: t('profile.languagePortuguese'),
+    en: t('profile.languageEnglish'),
+    fr: t('profile.languageFrench'),
+  };
+  const currentLanguage = languageLabels[i18n.language] ?? i18n.language;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
@@ -162,7 +610,14 @@ export default function ProfileScreen() {
           <SettingsRow
             icon={<MapPin size={20} color={COLORS.textSecondary} />}
             label={t('profile.deliveryAddress')}
-            onPress={() => {}}
+            value={
+              user?.address
+                ? user.address.length > 20
+                  ? user.address.slice(0, 20) + '...'
+                  : user.address
+                : undefined
+            }
+            onPress={() => setShowAddressModal(true)}
           />
           <SettingsRow
             icon={<Globe size={20} color={COLORS.textSecondary} />}
@@ -180,12 +635,34 @@ export default function ProfileScreen() {
           <SettingsRow
             icon={<Bell size={20} color={COLORS.textSecondary} />}
             label={t('profile.notifications')}
-            onPress={() => {}}
+            value={
+              notificationsEnabled
+                ? t('profile.notificationsEnabled')
+                : t('profile.notificationsDisabled')
+            }
+            onPress={handleToggleNotifications}
+            rightElement={
+              notifLoading ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={handleToggleNotifications}
+                  trackColor={{
+                    false: COLORS.border,
+                    true: COLORS.primaryLight,
+                  }}
+                  thumbColor={
+                    notificationsEnabled ? COLORS.primary : COLORS.textTertiary
+                  }
+                />
+              )
+            }
           />
           <SettingsRow
             icon={<Lock size={20} color={COLORS.textSecondary} />}
             label={t('profile.changePassword')}
-            onPress={() => {}}
+            onPress={() => setShowPasswordModal(true)}
           />
           <SettingsRow
             icon={<LogOut size={20} color={COLORS.error} />}
@@ -208,6 +685,16 @@ export default function ProfileScreen() {
           {t('profile.version')}
         </Text>
       </ScrollView>
+
+      {/* Modals */}
+      <AddressModal
+        visible={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+      />
+      <PasswordModal
+        visible={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </SafeAreaView>
   );
 }

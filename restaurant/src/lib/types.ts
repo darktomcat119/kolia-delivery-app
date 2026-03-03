@@ -113,29 +113,29 @@ export interface OwnerStats {
 }
 
 export const CUISINE_LABELS: Record<CuisineType, string> = {
-  west_african: 'West African',
-  congolese: 'Congolese',
-  north_african: 'North African',
-  central_african: 'Central African',
-  southern_african: 'Southern African',
-  lusophone_african: 'Lusophone African',
-  pan_african: 'Pan-African',
+  west_african: 'Ouest-Africaine',
+  congolese: 'Congolaise',
+  north_african: 'Nord-Africaine',
+  central_african: 'Centre-Africaine',
+  southern_african: 'Sud-Africaine',
+  lusophone_african: 'Afrique Lusophone',
+  pan_african: 'Pan-Africaine',
 };
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  received: 'Received',
-  preparing: 'Preparing',
-  ready: 'Ready',
-  on_the_way: 'On the Way',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  received: 'Reçue',
+  preparing: 'En préparation',
+  ready: 'Prête',
+  on_the_way: 'En livraison',
+  completed: 'Terminée',
+  cancelled: 'Annulée',
 };
 
 export const DIETARY_LABELS: Record<DietaryTag, string> = {
   halal: 'Halal',
-  vegan: 'Vegan',
-  vegetarian: 'Vegetarian',
-  spicy: 'Spicy',
-  gluten_free: 'Gluten Free',
-  contains_nuts: 'Contains Nuts',
+  vegan: 'Végan',
+  vegetarian: 'Végétarien',
+  spicy: 'Épicé',
+  gluten_free: 'Sans Gluten',
+  contains_nuts: 'Contient des Noix',
 };

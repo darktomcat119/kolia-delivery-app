@@ -27,6 +27,37 @@ owner.get('/restaurant', async (c) => {
   return c.json({ data });
 });
 
+// POST /api/owner/restaurant — create own restaurant
+owner.post('/restaurant', async (c) => {
+  const user = c.get('user');
+
+  // Check if owner already has a restaurant
+  const { data: existing } = await supabaseAdmin
+    .from('restaurants')
+    .select('id')
+    .eq('owner_id', user.id)
+    .limit(1);
+
+  if (existing && existing.length > 0) {
+    return c.json({ error: 'You already have a restaurant', code: 'ALREADY_EXISTS' }, 409);
+  }
+
+  const body = await c.req.json();
+  const result = createRestaurantSchema.safeParse(body);
+  if (!result.success) {
+    return c.json({ error: 'Invalid data', details: result.error.flatten(), code: 'VALIDATION_ERROR' }, 400);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('restaurants')
+    .insert({ ...result.data, owner_id: user.id })
+    .select()
+    .single();
+
+  if (error) return c.json({ error: error.message }, 500);
+  return c.json({ data }, 201);
+});
+
 // PATCH /api/owner/restaurant/:id — update own restaurant
 owner.patch('/restaurant/:id', async (c) => {
   const user = c.get('user');

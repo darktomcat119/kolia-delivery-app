@@ -76,7 +76,7 @@ export const FONT_FAMILIES = {
   displaySemibold: 'PlayfairDisplay_600SemiBold',
   body: 'DMSans_400Regular',
   bodyMedium: 'DMSans_500Medium',
-  bodySemibold: 'DMSans_600SemiBold',
+  bodySemibold: 'DMSans_700Bold',
 } as const;
 
 export const SHADOWS = {

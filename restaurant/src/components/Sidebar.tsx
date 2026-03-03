@@ -4,9 +4,9 @@ import { useAuth } from '../lib/auth';
 import type { LucideIcon } from 'lucide-react';
 
 const NAV_ITEMS: { path: string; label: string; icon: LucideIcon }[] = [
-  { path: '/dashboard', label: 'Orders', icon: LayoutDashboard },
+  { path: '/dashboard', label: 'Commandes', icon: LayoutDashboard },
   { path: '/menu', label: 'Menu', icon: UtensilsCrossed },
-  { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/settings', label: 'Paramètres', icon: Settings },
 ];
 
 export function Sidebar() {
@@ -55,7 +55,7 @@ export function Sidebar() {
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-400 transition-colors"
         >
           <LogOut size={14} />
-          Log out
+          Déconnexion
         </button>
       </div>
     </aside>

@@ -17,12 +17,12 @@ export function Register() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Les mots de passe ne correspondent pas');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
 
@@ -30,9 +30,9 @@ export function Register() {
 
     try {
       await signUp(email, password, fullName);
-      navigate('/dashboard');
+      navigate('/setup');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "L'inscription a échoué");
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ export function Register() {
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="font-display text-4xl text-primary mb-2">Kolia</h1>
-          <p className="text-[#6B6560] font-body">Register Your Restaurant</p>
+          <p className="text-[#6B6560] font-body">Inscrivez votre restaurant</p>
         </div>
 
         {/* Form */}
@@ -52,7 +52,7 @@ export function Register() {
           onSubmit={handleSubmit}
           className="bg-white rounded-2xl p-8 shadow-sm border border-border-light"
         >
-          <h2 className="text-xl font-semibold font-body mb-6">Create Account</h2>
+          <h2 className="text-xl font-semibold font-body mb-6">Créer un compte</h2>
 
           {error && (
             <div className="mb-4 p-3 rounded-xl bg-[#FDE8E8] text-[#DC2626] text-sm font-body">
@@ -63,7 +63,7 @@ export function Register() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Full Name
+                Nom complet
               </label>
               <input
                 type="text"
@@ -71,13 +71,13 @@ export function Register() {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-xl border border-border bg-white font-body text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-                placeholder="Your full name"
+                placeholder="Votre nom complet"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Email
+                E-mail
               </label>
               <input
                 type="email"
@@ -91,7 +91,7 @@ export function Register() {
 
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Password
+                Mot de passe
               </label>
               <input
                 type="password"
@@ -105,7 +105,7 @@ export function Register() {
 
             <div>
               <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Confirm Password
+                Confirmer le mot de passe
               </label>
               <input
                 type="password"
@@ -122,14 +122,14 @@ export function Register() {
               disabled={loading}
               className="w-full py-3 rounded-xl bg-primary text-white font-body font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Création du compte...' : 'Créer un compte'}
             </button>
           </div>
 
           <p className="mt-6 text-center text-sm text-[#6B6560] font-body">
-            Already have an account?{' '}
+            Déjà un compte ?{' '}
             <Link to="/login" className="text-primary hover:underline font-medium">
-              Sign in
+              Se connecter
             </Link>
           </p>
         </form>

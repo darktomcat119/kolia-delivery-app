@@ -162,7 +162,18 @@
     "phone": "Téléphone",
     "languagePortuguese": "Português",
     "languageEnglish": "English",
-    "languageFrench": "Français"
+    "languageFrench": "Français",
+    "addressPlaceholder": "Entrez votre adresse de livraison",
+    "addressSaved": "Adresse enregistrée",
+    "locatingAddress": "Localisation...",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmNewPassword": "Confirmer le nouveau mot de passe",
+    "passwordChanged": "Mot de passe mis à jour",
+    "passwordChangeFailed": "Échec de la mise à jour du mot de passe",
+    "notificationsEnabled": "Activées",
+    "notificationsDisabled": "Désactivées",
+    "notificationsPermissionDenied": "Permission refusée. Activez les notifications dans les réglages."
   },
   "dietary": {
     "halal": "Halal",

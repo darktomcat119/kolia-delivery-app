@@ -15,7 +15,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
-        <div className="text-[#6B6560] font-body">Loading...</div>
+        <div className="text-[#6B6560] font-body">Chargement...</div>
       </div>
     );
   }

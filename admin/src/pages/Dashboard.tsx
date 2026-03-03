@@ -27,42 +27,42 @@ export function Dashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30s
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Loading dashboard...</div>
+        <div className="text-[#6B6560] font-body">Chargement...</div>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold font-body mb-8">Dashboard</h1>
+      <h1 className="text-2xl font-semibold font-body mb-8">Tableau de bord</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
           icon={<Package size={20} />}
-          label="Orders Today"
+          label="Commandes aujourd'hui"
           value={stats?.orders_today ?? 0}
         />
         <StatsCard
           icon={<DollarSign size={20} />}
-          label="Revenue Today"
+          label="Revenu aujourd'hui"
           value={`€${(stats?.revenue_today ?? 0).toFixed(2)}`}
         />
         <StatsCard
           icon={<Store size={20} />}
-          label="Active Restaurants"
+          label="Restaurants actifs"
           value={stats?.active_restaurants ?? 0}
         />
         <StatsCard
           icon={<Clock size={20} />}
-          label="Pending Orders"
+          label="Commandes en attente"
           value={stats?.pending_orders ?? 0}
         />
       </div>
@@ -70,12 +70,12 @@ export function Dashboard() {
       {/* Recent Orders */}
       <div className="bg-white rounded-2xl shadow-sm border border-border-light">
         <div className="p-6 border-b border-border-light">
-          <h2 className="text-lg font-semibold font-body">Recent Orders</h2>
+          <h2 className="text-lg font-semibold font-body">Commandes récentes</h2>
         </div>
 
         {recentOrders.length === 0 ? (
           <div className="p-12 text-center text-[#6B6560] font-body">
-            No orders yet
+            Aucune commande
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -83,10 +83,10 @@ export function Dashboard() {
               <thead>
                 <tr className="border-b border-border-light">
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Order #
+                    N° commande
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Customer
+                    Client
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                     Restaurant
@@ -95,7 +95,7 @@ export function Dashboard() {
                     Total
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
-                    Status
+                    Statut
                   </th>
                   <th className="text-left p-4 text-sm font-medium text-[#6B6560] font-body">
                     Date
@@ -112,10 +112,10 @@ export function Dashboard() {
                       {order.order_number}
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {order.profile?.full_name ?? 'Unknown'}
+                      {order.profile?.full_name ?? 'Inconnu'}
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {order.restaurant?.name ?? 'Unknown'}
+                      {order.restaurant?.name ?? 'Inconnu'}
                     </td>
                     <td className="p-4 text-sm font-body">
                       €{Number(order.total).toFixed(2)}
@@ -124,7 +124,7 @@ export function Dashboard() {
                       <StatusBadge status={order.status} />
                     </td>
                     <td className="p-4 text-sm font-body text-[#6B6560]">
-                      {new Date(order.created_at).toLocaleDateString()}
+                      {new Date(order.created_at).toLocaleDateString('fr-FR')}
                     </td>
                   </tr>
                 ))}
