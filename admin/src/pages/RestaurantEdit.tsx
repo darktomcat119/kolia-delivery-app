@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 import type { Restaurant, CuisineType } from '../lib/types';
@@ -14,9 +15,9 @@ const EMPTY_RESTAURANT: Partial<Restaurant> = {
   cuisine_type: 'west_african',
   address: '',
   city: '',
-  country: 'PT',
-  latitude: 38.7223,
-  longitude: -9.1393,
+  country: 'FR',
+  latitude: 48.8566,
+  longitude: 2.3522,
   phone: '',
   image_url: '',
   logo_url: '',
@@ -122,7 +123,7 @@ export function RestaurantEdit() {
           onClick={() => navigate('/restaurants')}
           className="text-[#6B6560] hover:text-[#1A1A1A] transition-colors"
         >
-          ← Back
+          <ArrowLeft size={18} className="inline -mt-0.5" /> Back
         </button>
         <h1 className="text-2xl font-semibold font-body">
           {isNew ? 'New Restaurant' : 'Edit Restaurant'}

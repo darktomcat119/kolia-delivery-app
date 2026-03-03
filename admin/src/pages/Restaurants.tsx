@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Plus, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 import type { Restaurant } from '../lib/types';
@@ -68,7 +69,7 @@ export function Restaurants() {
           onClick={() => navigate('/restaurants/new')}
           className="px-5 py-2.5 rounded-xl bg-primary text-white font-body font-medium text-sm hover:bg-primary-dark transition-colors"
         >
-          + Add Restaurant
+          <Plus size={16} className="inline -mt-0.5" /> Add Restaurant
         </button>
       </div>
 
@@ -152,7 +153,7 @@ export function Restaurants() {
                     }
                     className="py-2 px-3 rounded-xl border border-[#FDE8E8] text-[#DC2626] text-sm hover:bg-[#FDE8E8] transition-colors"
                   >
-                    ✕
+                    <X size={16} />
                   </button>
                 </div>
               </div>

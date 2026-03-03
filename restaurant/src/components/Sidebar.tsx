@@ -1,12 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, UtensilsCrossed, LogOut } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import type { LucideIcon } from 'lucide-react';
 
 const NAV_ITEMS: { path: string; label: string; icon: LucideIcon }[] = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/orders', label: 'Orders', icon: Package },
-  { path: '/restaurants', label: 'Restaurants', icon: UtensilsCrossed },
+  { path: '/dashboard', label: 'Orders', icon: LayoutDashboard },
+  { path: '/menu', label: 'Menu', icon: UtensilsCrossed },
+  { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Sidebar() {
@@ -22,7 +22,7 @@ export function Sidebar() {
     <aside className="w-[260px] bg-[#1A1A1A] text-white flex flex-col min-h-screen">
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
-        <h1 className="font-display text-xl text-primary">Kolia Admin</h1>
+        <h1 className="font-display text-xl text-primary">Kolia Restaurant</h1>
       </div>
 
       {/* Navigation */}

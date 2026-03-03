@@ -92,7 +92,6 @@ export interface Order {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  restaurant?: { id: string; name: string };
   profile?: { full_name: string; email: string; phone: string | null };
   order_items?: OrderItem[];
 }
@@ -106,11 +105,11 @@ export interface OrderItem {
   quantity: number;
 }
 
-export interface DashboardStats {
+export interface OwnerStats {
   orders_today: number;
   revenue_today: number;
-  active_restaurants: number;
   pending_orders: number;
+  total_orders: number;
 }
 
 export const CUISINE_LABELS: Record<CuisineType, string> = {

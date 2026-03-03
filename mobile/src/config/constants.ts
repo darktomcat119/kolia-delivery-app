@@ -98,7 +98,7 @@ export const SHADOWS = {
 
 export const CUISINE_TYPES = [
   'west_african',
-  'east_african',
+  'congolese',
   'north_african',
   'central_african',
   'southern_african',

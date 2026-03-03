@@ -12,7 +12,7 @@ interface CuisineFilterProps {
 const CUISINES: { key: CuisineType | null; labelKey: string }[] = [
   { key: null, labelKey: 'home.cuisineAll' },
   { key: 'west_african', labelKey: 'home.cuisineWestAfrican' },
-  { key: 'east_african', labelKey: 'home.cuisineEastAfrican' },
+  { key: 'congolese', labelKey: 'home.cuisineCongolese' },
   { key: 'north_african', labelKey: 'home.cuisineNorthAfrican' },
   { key: 'central_african', labelKey: 'home.cuisineCentralAfrican' },
   { key: 'southern_african', labelKey: 'home.cuisineSouthernAfrican' },

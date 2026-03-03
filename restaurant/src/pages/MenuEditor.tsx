@@ -1,7 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, Pencil, X, Plus } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Check, Pencil, X, Plus } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Restaurant, MenuCategory, MenuItem, DietaryTag } from '../lib/types';
 import { DIETARY_LABELS } from '../lib/types';
@@ -31,9 +29,6 @@ const EMPTY_ITEM: ItemFormState = {
 };
 
 export function MenuEditor() {
-  const { id: restaurantId } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -51,42 +46,38 @@ export function MenuEditor() {
   const [itemForm, setItemForm] = useState<ItemFormState>(EMPTY_ITEM);
 
   useEffect(() => {
-    if (!restaurantId) return;
-
-    Promise.all([
-      supabase.from('restaurants').select('*').eq('id', restaurantId).single(),
-      supabase
-        .from('menu_categories')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('sort_order'),
-      supabase
-        .from('menu_items')
-        .select('*')
-        .eq('restaurant_id', restaurantId)
-        .order('sort_order'),
-    ]).then(([restRes, catRes, itemRes]) => {
-      if (restRes.data) setRestaurant(restRes.data as Restaurant);
-      if (catRes.data) {
-        const cats = catRes.data as MenuCategory[];
+    const fetchData = async () => {
+      try {
+        const [restaurants, cats, menuItems] = await Promise.all([
+          api.get<Restaurant[]>('/api/owner/restaurant'),
+          api.get<MenuCategory[]>('/api/owner/categories'),
+          api.get<MenuItem[]>('/api/owner/items'),
+        ]);
+        if (restaurants.length > 0) setRestaurant(restaurants[0]);
         setCategories(cats);
         if (cats.length > 0) setActiveCategory(cats[0].id);
+        setItems(menuItems);
+      } catch (err) {
+        console.error('Failed to fetch menu data:', err);
+      } finally {
+        setLoading(false);
       }
-      if (itemRes.data) setItems(itemRes.data as MenuItem[]);
-      setLoading(false);
-    });
-  }, [restaurantId]);
+    };
+
+    fetchData();
+  }, []);
 
   // Category actions
   const handleAddCategory = async (e: FormEvent) => {
     e.preventDefault();
-    if (!newCategoryName.trim() || !restaurantId) return;
+    if (!newCategoryName.trim() || !restaurant) return;
 
     try {
-      const data = await api.post<MenuCategory>(
-        `/api/admin/restaurants/${restaurantId}/categories`,
-        { name: newCategoryName.trim(), sort_order: categories.length },
-      );
+      const data = await api.post<MenuCategory>('/api/owner/categories', {
+        name: newCategoryName.trim(),
+        sort_order: categories.length,
+        restaurant_id: restaurant.id,
+      });
       setCategories((prev) => [...prev, data]);
       setActiveCategory(data.id);
       setNewCategoryName('');
@@ -99,7 +90,7 @@ export function MenuEditor() {
     if (!editCategoryName.trim()) return;
 
     try {
-      await api.patch(`/api/admin/categories/${categoryId}`, {
+      await api.patch(`/api/owner/categories/${categoryId}`, {
         name: editCategoryName.trim(),
       });
       setCategories((prev) =>
@@ -121,7 +112,7 @@ export function MenuEditor() {
     }
 
     try {
-      await api.delete(`/api/admin/categories/${categoryId}`);
+      await api.delete(`/api/owner/categories/${categoryId}`);
       setCategories((prev) => prev.filter((c) => c.id !== categoryId));
       setItems((prev) => prev.filter((i) => i.category_id !== categoryId));
       if (activeCategory === categoryId) {
@@ -135,13 +126,14 @@ export function MenuEditor() {
   // Item actions
   const handleAddItem = async (e: FormEvent) => {
     e.preventDefault();
-    if (!activeCategory || !restaurantId) return;
+    if (!activeCategory || !restaurant) return;
 
     try {
-      const data = await api.post<MenuItem>(
-        `/api/admin/restaurants/${restaurantId}/items`,
-        { ...itemForm, category_id: activeCategory },
-      );
+      const data = await api.post<MenuItem>('/api/owner/items', {
+        ...itemForm,
+        category_id: activeCategory,
+        restaurant_id: restaurant.id,
+      });
       setItems((prev) => [...prev, data]);
       setItemForm(EMPTY_ITEM);
       setShowItemForm(false);
@@ -155,10 +147,7 @@ export function MenuEditor() {
     if (!editingItem) return;
 
     try {
-      const data = await api.patch<MenuItem>(
-        `/api/admin/items/${editingItem}`,
-        itemForm,
-      );
+      const data = await api.patch<MenuItem>(`/api/owner/items/${editingItem}`, itemForm);
       setItems((prev) => prev.map((i) => (i.id === editingItem ? data : i)));
       setEditingItem(null);
       setItemForm(EMPTY_ITEM);
@@ -172,7 +161,7 @@ export function MenuEditor() {
     if (!window.confirm('Delete this item?')) return;
 
     try {
-      await api.delete(`/api/admin/items/${itemId}`);
+      await api.delete(`/api/owner/items/${itemId}`);
       setItems((prev) => prev.filter((i) => i.id !== itemId));
     } catch (err) {
       console.error('Failed to delete item:', err);
@@ -181,13 +170,9 @@ export function MenuEditor() {
 
   const handleToggleAvailable = async (itemId: string, current: boolean) => {
     try {
-      await api.patch(`/api/admin/items/${itemId}`, {
-        is_available: !current,
-      });
+      await api.patch(`/api/owner/items/${itemId}`, { is_available: !current });
       setItems((prev) =>
-        prev.map((i) =>
-          i.id === itemId ? { ...i, is_available: !current } : i,
-        ),
+        prev.map((i) => (i.id === itemId ? { ...i, is_available: !current } : i)),
       );
     } catch (err) {
       console.error('Failed to toggle availability:', err);
@@ -227,19 +212,24 @@ export function MenuEditor() {
     );
   }
 
+  if (!restaurant) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-[#6B6560] font-body mb-2">No restaurant found</p>
+          <p className="text-sm text-[#9C9690] font-body">
+            Contact the admin to assign a restaurant to your account.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/restaurants')}
-          className="text-[#6B6560] hover:text-[#1A1A1A] transition-colors"
-        >
-          <ArrowLeft size={18} className="inline -mt-0.5" /> Back
-        </button>
-        <h1 className="text-2xl font-semibold font-body">
-          Menu — {restaurant?.name}
-        </h1>
-      </div>
+      <h1 className="text-2xl font-semibold font-body mb-6">
+        Menu — {restaurant.name}
+      </h1>
 
       <div className="flex gap-6">
         {/* Categories Sidebar */}
@@ -353,7 +343,7 @@ export function MenuEditor() {
                 </button>
               </div>
 
-              {/* Item Form Modal */}
+              {/* Item Form */}
               {showItemForm && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light mb-6">
                   <h3 className="text-base font-semibold font-body mb-4">
@@ -385,10 +375,7 @@ export function MenuEditor() {
                         <textarea
                           value={itemForm.description}
                           onChange={(e) =>
-                            setItemForm((p) => ({
-                              ...p,
-                              description: e.target.value,
-                            }))
+                            setItemForm((p) => ({ ...p, description: e.target.value }))
                           }
                           rows={2}
                           className="w-full px-3 py-2.5 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary resize-none"
@@ -404,10 +391,7 @@ export function MenuEditor() {
                           min="0"
                           value={itemForm.price}
                           onChange={(e) =>
-                            setItemForm((p) => ({
-                              ...p,
-                              price: Number(e.target.value),
-                            }))
+                            setItemForm((p) => ({ ...p, price: Number(e.target.value) }))
                           }
                           required
                           className="w-full px-3 py-2.5 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
@@ -421,10 +405,7 @@ export function MenuEditor() {
                           type="url"
                           value={itemForm.image_url}
                           onChange={(e) =>
-                            setItemForm((p) => ({
-                              ...p,
-                              image_url: e.target.value,
-                            }))
+                            setItemForm((p) => ({ ...p, image_url: e.target.value }))
                           }
                           placeholder="https://..."
                           className="w-full px-3 py-2.5 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"

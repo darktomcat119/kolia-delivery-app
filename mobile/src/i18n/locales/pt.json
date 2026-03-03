@@ -59,7 +59,7 @@
     "searchPlaceholder": "Pesquisar restaurantes ou pratos...",
     "cuisineAll": "Todos",
     "cuisineWestAfrican": "Africana Ocidental",
-    "cuisineEastAfrican": "Africana Oriental",
+    "cuisineCongolese": "Congolesa",
     "cuisineNorthAfrican": "Norte-Africana",
     "cuisineCentralAfrican": "Africana Central",
     "cuisineSouthernAfrican": "Africana Austral",
@@ -161,7 +161,8 @@
     "saveChanges": "Guardar Alterações",
     "phone": "Telefone",
     "languagePortuguese": "Português",
-    "languageEnglish": "English"
+    "languageEnglish": "English",
+    "languageFrench": "Français"
   },
   "dietary": {
     "halal": "Halal",

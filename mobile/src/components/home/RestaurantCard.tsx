@@ -16,7 +16,7 @@ interface RestaurantCardProps {
 
 const CUISINE_LABELS: Record<string, string> = {
   west_african: 'West African',
-  east_african: 'East African',
+  congolese: 'Congolese',
   north_african: 'North African',
   central_african: 'Central African',
   southern_african: 'Southern African',

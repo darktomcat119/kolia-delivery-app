@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Package, DollarSign, Store, Clock } from 'lucide-react';
 import { StatsCard } from '../components/StatsCard';
 import { StatusBadge } from '../components/StatusBadge';
 import { api } from '../lib/api';
@@ -45,22 +46,22 @@ export function Dashboard() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
-          icon="📦"
+          icon={<Package size={20} />}
           label="Orders Today"
           value={stats?.orders_today ?? 0}
         />
         <StatsCard
-          icon="💰"
+          icon={<DollarSign size={20} />}
           label="Revenue Today"
           value={`€${(stats?.revenue_today ?? 0).toFixed(2)}`}
         />
         <StatsCard
-          icon="🍽"
+          icon={<Store size={20} />}
           label="Active Restaurants"
           value={stats?.active_restaurants ?? 0}
         />
         <StatsCard
-          icon="⏳"
+          icon={<Clock size={20} />}
           label="Pending Orders"
           value={stats?.pending_orders ?? 0}
         />

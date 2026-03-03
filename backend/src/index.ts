@@ -7,6 +7,7 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import orders from './routes/orders.js';
 import admin from './routes/admin.js';
+import owner from './routes/owner.js';
 import webhooks from './routes/webhooks.js';
 import notifications from './routes/notifications.js';
 
@@ -17,7 +18,7 @@ app.use('*', logger());
 app.use(
   '*',
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:8081', 'http://localhost:19006'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:8081', 'http://localhost:19006'],
     allowMethods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   }),
@@ -30,6 +31,7 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 // Routes
 app.route('/api/orders', orders);
 app.route('/api/admin', admin);
+app.route('/api/owner', owner);
 app.route('/api/webhooks', webhooks);
 app.route('/api/notifications', notifications);
 

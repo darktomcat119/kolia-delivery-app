@@ -8,7 +8,7 @@
 
 CREATE TYPE cuisine_type AS ENUM (
   'west_african',
-  'east_african',
+  'congolese',
   'north_african',
   'central_african',
   'southern_african',
@@ -32,6 +32,7 @@ CREATE TYPE order_type AS ENUM (
 
 CREATE TYPE user_role AS ENUM (
   'customer',
+  'restaurant_owner',
   'admin'
 );
 
@@ -57,7 +58,7 @@ CREATE TABLE public.profiles (
   address TEXT,
   latitude DOUBLE PRECISION,
   longitude DOUBLE PRECISION,
-  preferred_language VARCHAR(2) DEFAULT 'pt' CHECK (preferred_language IN ('pt', 'en')),
+  preferred_language VARCHAR(2) DEFAULT 'fr' CHECK (preferred_language IN ('pt', 'en', 'fr')),
   role user_role DEFAULT 'customer',
   expo_push_token TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -67,6 +68,7 @@ CREATE TABLE public.profiles (
 -- RESTAURANTS
 CREATE TABLE public.restaurants (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID REFERENCES public.profiles(id),
   name TEXT NOT NULL,
   description TEXT,
   cuisine_type cuisine_type NOT NULL,
@@ -86,7 +88,7 @@ CREATE TABLE public.restaurants (
   delivery_radius_km DECIMAL(5,2) DEFAULT 5.00,
   pickup_available BOOLEAN DEFAULT true,
   is_active BOOLEAN DEFAULT true,
-  language VARCHAR(2) DEFAULT 'pt',
+  language VARCHAR(2) DEFAULT 'fr',
   rating DECIMAL(3,2) DEFAULT 0.00,
   total_reviews INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -166,6 +168,7 @@ CREATE TABLE public.notifications (
 -- INDEXES
 -- ============================================
 
+CREATE INDEX idx_restaurants_owner ON public.restaurants(owner_id);
 CREATE INDEX idx_restaurants_city ON public.restaurants(city);
 CREATE INDEX idx_restaurants_cuisine ON public.restaurants(cuisine_type);
 CREATE INDEX idx_restaurants_active ON public.restaurants(is_active);
@@ -197,18 +200,29 @@ CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Restaurants (public read)
+-- Restaurants (public read + owner management)
 CREATE POLICY "Anyone can view active restaurants" ON public.restaurants FOR SELECT USING (is_active = true);
+CREATE POLICY "Owners can view own restaurants" ON public.restaurants FOR SELECT USING (auth.uid() = owner_id);
+CREATE POLICY "Owners can update own restaurants" ON public.restaurants FOR UPDATE USING (auth.uid() = owner_id);
+CREATE POLICY "Owners can insert restaurants" ON public.restaurants FOR INSERT WITH CHECK (auth.uid() = owner_id);
 
--- Menu Categories (public read)
+-- Menu Categories (public read + owner management)
 CREATE POLICY "Anyone can view menu categories" ON public.menu_categories FOR SELECT USING (is_active = true);
+CREATE POLICY "Owners can manage categories" ON public.menu_categories FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = menu_categories.restaurant_id AND restaurants.owner_id = auth.uid()));
 
--- Menu Items (public read)
+-- Menu Items (public read + owner management)
 CREATE POLICY "Anyone can view menu items" ON public.menu_items FOR SELECT USING (true);
+CREATE POLICY "Owners can manage items" ON public.menu_items FOR ALL
+  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = menu_items.restaurant_id AND restaurants.owner_id = auth.uid()));
 
 -- Orders
 CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can create orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Owners can view restaurant orders" ON public.orders FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = orders.restaurant_id AND restaurants.owner_id = auth.uid()));
+CREATE POLICY "Owners can update restaurant orders" ON public.orders FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = orders.restaurant_id AND restaurants.owner_id = auth.uid()));
 
 -- Order Items
 CREATE POLICY "Users can view own order items" ON public.order_items FOR SELECT

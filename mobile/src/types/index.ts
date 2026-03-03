@@ -4,7 +4,7 @@
 
 export type CuisineType =
   | 'west_african'
-  | 'east_african'
+  | 'congolese'
   | 'north_african'
   | 'central_african'
   | 'southern_african'
@@ -21,7 +21,7 @@ export type OrderStatus =
 
 export type OrderType = 'delivery' | 'pickup';
 
-export type UserRole = 'customer' | 'admin';
+export type UserRole = 'customer' | 'restaurant_owner' | 'admin';
 
 export type DietaryTag =
   | 'halal'
@@ -43,7 +43,7 @@ export interface Profile {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
-  preferred_language: 'pt' | 'en';
+  preferred_language: 'pt' | 'en' | 'fr';
   role: UserRole;
   expo_push_token: string | null;
   created_at: string;
@@ -56,6 +56,7 @@ export interface OpeningHours {
 
 export interface Restaurant {
   id: string;
+  owner_id: string | null;
   name: string;
   description: string | null;
   cuisine_type: CuisineType;

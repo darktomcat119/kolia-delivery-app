@@ -14,9 +14,7 @@ export function StatsCard({ label, value, icon }: StatsCardProps) {
           {icon}
         </div>
       </div>
-      <div className="text-3xl font-semibold font-body text-[#1A1A1A] mb-1">
-        {value}
-      </div>
+      <div className="text-3xl font-semibold font-body text-[#1A1A1A] mb-1">{value}</div>
       <div className="text-sm text-[#6B6560] font-body">{label}</div>
     </div>
   );

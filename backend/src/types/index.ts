@@ -39,7 +39,7 @@ export const createRestaurantSchema = z.object({
   description: z.string().optional(),
   cuisine_type: z.enum([
     'west_african',
-    'east_african',
+    'congolese',
     'north_african',
     'central_african',
     'southern_african',
@@ -93,5 +93,5 @@ export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 export interface AuthUser {
   id: string;
   email: string;
-  role: 'customer' | 'admin';
+  role: 'customer' | 'restaurant_owner' | 'admin';
 }

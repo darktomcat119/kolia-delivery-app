@@ -59,7 +59,7 @@
     "searchPlaceholder": "Search restaurants or dishes...",
     "cuisineAll": "All",
     "cuisineWestAfrican": "West African",
-    "cuisineEastAfrican": "East African",
+    "cuisineCongolese": "Congolese",
     "cuisineNorthAfrican": "North African",
     "cuisineCentralAfrican": "Central African",
     "cuisineSouthernAfrican": "Southern African",
@@ -161,7 +161,8 @@
     "saveChanges": "Save Changes",
     "phone": "Phone",
     "languagePortuguese": "Português",
-    "languageEnglish": "English"
+    "languageEnglish": "English",
+    "languageFrench": "Français"
   },
   "dietary": {
     "halal": "Halal",
