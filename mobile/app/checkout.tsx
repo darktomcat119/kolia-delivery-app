@@ -464,6 +464,18 @@ export default function CheckoutScreen() {
           ...SHADOWS.elevated,
         }}
       >
+        {/* Disabled reason */}
+        {orderType === 'delivery' && outsideRadius && (
+          <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 12, color: COLORS.warning, textAlign: 'center', marginBottom: 10 }}>
+            ⚠️ {t('checkout.outsideRadius')}
+          </Text>
+        )}
+        {belowMinimum && (
+          <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 12, color: COLORS.warning, textAlign: 'center', marginBottom: 10 }}>
+            ⚠️ Minimum de commande : {formatPrice(restaurant?.minimum_order ?? 0)}
+          </Text>
+        )}
+
         <Pressable
           onPress={handlePlaceOrder}
           disabled={loading || (orderType === 'delivery' && outsideRadius) || belowMinimum}

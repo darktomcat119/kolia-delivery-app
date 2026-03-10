@@ -2,6 +2,37 @@
 -- KOLIA DELIVERY APP — SEED DATA
 -- 8 Demo Restaurants (Paris, Lyon, Grenoble)
 -- ============================================
+-- NOTE: This seed file assumes you have created the following
+-- users in Supabase Auth (Dashboard > Authentication > Users)
+-- BEFORE running this seed:
+--
+-- 1. Admin:         admin@kolia.app       (any password)
+-- 2. Owner Paris:   owner.paris@kolia.app (any password)
+-- 3. Owner Lyon:    owner.lyon@kolia.app  (any password)
+-- 4. Owner Grenoble: owner.grenoble@kolia.app (any password)
+-- 5. Customer:      customer@kolia.app    (any password)
+--
+-- After creating them, copy their UUIDs from the Supabase dashboard
+-- and replace the placeholder UUIDs below (aaaaaaaa-..., bbbbbbbb-..., etc.)
+-- Then update their roles in the profiles table.
+-- ============================================
+
+-- ============================================
+-- UPDATE DEMO USER PROFILES (after auth signup)
+-- Replace these UUIDs with the real ones from Supabase Auth
+-- ============================================
+
+-- To set up users, run these AFTER creating auth users:
+-- UPDATE public.profiles SET role = 'admin', full_name = 'Kolia Admin' WHERE email = 'admin@kolia.app';
+-- UPDATE public.profiles SET role = 'restaurant_owner', full_name = 'Owner Paris' WHERE email = 'owner.paris@kolia.app';
+-- UPDATE public.profiles SET role = 'restaurant_owner', full_name = 'Owner Lyon' WHERE email = 'owner.lyon@kolia.app';
+-- UPDATE public.profiles SET role = 'restaurant_owner', full_name = 'Owner Grenoble' WHERE email = 'owner.grenoble@kolia.app';
+-- UPDATE public.profiles SET role = 'customer', full_name = 'Demo Customer', address = '10 Rue de Rivoli, 75001 Paris', latitude = 48.8606, longitude = 2.3376 WHERE email = 'customer@kolia.app';
+
+-- After setting owner roles, assign restaurants:
+-- UPDATE public.restaurants SET owner_id = (SELECT id FROM profiles WHERE email = 'owner.paris@kolia.app') WHERE city = 'Paris';
+-- UPDATE public.restaurants SET owner_id = (SELECT id FROM profiles WHERE email = 'owner.lyon@kolia.app') WHERE city = 'Lyon';
+-- UPDATE public.restaurants SET owner_id = (SELECT id FROM profiles WHERE email = 'owner.grenoble@kolia.app') WHERE city = 'Grenoble';
 
 -- ============================================
 -- RESTAURANT 1: Sabores de Luanda (Paris)
@@ -285,3 +316,89 @@ INSERT INTO public.menu_items (restaurant_id, category_id, name, description, pr
   ('88888888-8888-8888-8888-888888888888', 'c8a80008-0008-0008-0008-000000000005', 'Thiakry', 'Dessert de couscous sucré au yaourt et raisins secs', 5.50, true, '{vegetarian}', 0),
   ('88888888-8888-8888-8888-888888888888', 'c8a80008-0008-0008-0008-000000000005', 'Sombi', 'Riz au lait sénégalais à la noix de coco et vanille', 5.00, true, '{vegetarian,gluten_free}', 1),
   ('88888888-8888-8888-8888-888888888888', 'c8a80008-0008-0008-0008-000000000005', 'Banane Flambée', 'Banane flambée au sucre brun et cannelle', 4.50, true, '{vegan,gluten_free}', 2);
+
+-- ============================================
+-- RESTAURANT COVER IMAGES
+-- Using Unsplash CDN (stable photo IDs)
+-- ============================================
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '11111111-1111-1111-1111-111111111111';  -- Sabores de Luanda
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '22222222-2222-2222-2222-222222222222';  -- Morabeza Kitchen
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '33333333-3333-3333-3333-333333333333';  -- Chez Fatou
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '44444444-4444-4444-4444-444444444444';  -- Le Ndolé
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '55555555-5555-5555-5555-555555555555';  -- Lagos Grill House
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '66666666-6666-6666-6666-666666666666';  -- Maman Congo
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '77777777-7777-7777-7777-777777777777';  -- Riad Essaouira
+
+UPDATE public.restaurants SET
+  image_url = 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=800&q=80&auto=format&fit=crop',
+  logo_url  = 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200&q=80&auto=format&fit=crop'
+WHERE id = '88888888-8888-8888-8888-888888888888';  -- Dakar Grenoble
+
+-- ============================================
+-- MENU ITEM IMAGES (signature dishes only)
+-- ============================================
+-- Restaurant 1 — Sabores de Luanda
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '11111111-1111-1111-1111-111111111111' AND name = 'Muamba de Galinha';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '11111111-1111-1111-1111-111111111111' AND name = 'Calulu de Peixe';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '11111111-1111-1111-1111-111111111111' AND name = 'Funge com Mufete';
+
+-- Restaurant 2 — Morabeza Kitchen
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '22222222-2222-2222-2222-222222222222' AND name = 'Cachupa Rica';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '22222222-2222-2222-2222-222222222222' AND name = 'Buzio Grelhado';
+
+-- Restaurant 3 — Chez Fatou
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '33333333-3333-3333-3333-333333333333' AND name = 'Thiéboudienne';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '33333333-3333-3333-3333-333333333333' AND name = 'Yassa Poulet';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '33333333-3333-3333-3333-333333333333' AND name = 'Mafé Boeuf';
+
+-- Restaurant 4 — Le Ndolé
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '44444444-4444-4444-4444-444444444444' AND name = 'Ndolé';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '44444444-4444-4444-4444-444444444444' AND name = 'Poulet DG';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '44444444-4444-4444-4444-444444444444' AND name = 'Soya Brochettes';
+
+-- Restaurant 5 — Lagos Grill House
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '55555555-5555-5555-5555-555555555555' AND name = 'Jollof Rice';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '55555555-5555-5555-5555-555555555555' AND name = 'Egusi Soup avec Igname Pilé';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '55555555-5555-5555-5555-555555555555' AND name = 'Suya';
+
+-- Restaurant 6 — Maman Congo
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '66666666-6666-6666-6666-666666666666' AND name = 'Poulet à la Moambé';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1625944230945-1b7dd3b949ab?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '66666666-6666-6666-6666-666666666666' AND name = 'Pondu';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '66666666-6666-6666-6666-666666666666' AND name = 'Maboke de Poisson';
+
+-- Restaurant 7 — Riad Essaouira
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '77777777-7777-7777-7777-777777777777' AND name = 'Tajine d''Agneau';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '77777777-7777-7777-7777-777777777777' AND name = 'Couscous Royal';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '77777777-7777-7777-7777-777777777777' AND name = 'Pastilla au Poulet';
+
+-- Restaurant 8 — Dakar Grenoble
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '88888888-8888-8888-8888-888888888888' AND name = 'Yassa Poulet';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '88888888-8888-8888-8888-888888888888' AND name = 'Thiéboudienne';
+UPDATE public.menu_items SET image_url = 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=600&q=80&auto=format&fit=crop' WHERE restaurant_id = '88888888-8888-8888-8888-888888888888' AND name = 'Mafé de Bœuf';

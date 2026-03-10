@@ -17,24 +17,40 @@ export async function authMiddleware(c: Context, next: Next) {
 
   const token = authHeader.slice(7);
 
-  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+  try {
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) {
+      return c.json({ error: 'Invalid or expired token', code: 'UNAUTHORIZED' }, 401);
+    }
 
-  if (error || !user) {
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    c.set('user', {
+      id: user.id,
+      email: user.email!,
+      role: profile?.role ?? 'customer',
+    } as AuthUser);
+  } catch (err: unknown) {
+    const cause = err instanceof Error ? err.cause : null;
+    const causeCode =
+      cause && typeof cause === 'object' && 'code' in cause ? (cause as { code?: string }).code : undefined;
+    const isAbort = err instanceof Error && ((err as { name?: string }).name === 'AbortError' || err.message.toLowerCase().includes('aborted'));
+    const isNetworkError =
+      isAbort ||
+      (typeof causeCode === 'string' && causeCode.startsWith('UND_ERR_')) ||
+      (err instanceof Error && err.message.toLowerCase().includes('fetch failed'));
+    if (isNetworkError) {
+      return c.json(
+        { error: 'Auth service unavailable (network error)', code: 'SERVICE_UNAVAILABLE' },
+        503
+      );
+    }
     return c.json({ error: 'Invalid or expired token', code: 'UNAUTHORIZED' }, 401);
   }
-
-  // Fetch profile for role
-  const { data: profile } = await supabaseAdmin
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  c.set('user', {
-    id: user.id,
-    email: user.email!,
-    role: profile?.role ?? 'customer',
-  });
 
   await next();
 }

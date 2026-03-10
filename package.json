@@ -1,0 +1,16 @@
+{
+  "name": "kolia-delivery-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"BACKEND,ADMIN,RESTAURANT,MOBILE\" --prefix-colors \"blue,green,yellow,magenta\" \"npm run dev:backend\" \"npm run dev:admin\" \"npm run dev:restaurant\" \"npm run dev:mobile\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:restaurant": "cd restaurant && npm run dev",
+    "dev:mobile": "cd mobile && npx expo start",
+    "install:all": "cd backend && npm install && cd ../admin && npm install && cd ../restaurant && npm install && cd ../mobile && npm install --legacy-peer-deps"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

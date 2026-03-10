@@ -10,6 +10,7 @@ import admin from './routes/admin.js';
 import owner from './routes/owner.js';
 import webhooks from './routes/webhooks.js';
 import notifications from './routes/notifications.js';
+import { checkTcpConnectivity, getSupabaseHostFromEnv } from './lib/supabaseConnectivity.js';
 
 const app = new Hono();
 
@@ -51,3 +52,19 @@ console.log(`Kolia API starting on port ${port}...`);
 serve({ fetch: app.fetch, port }, () => {
   console.log(`Kolia API running at http://localhost:${port}`);
 });
+
+// Best-effort startup signal for common "Supabase unreachable" issues.
+setTimeout(async () => {
+  const host = getSupabaseHostFromEnv();
+  if (!host) {
+    console.warn('[startup] SUPABASE_URL missing/invalid; cannot check connectivity');
+    return;
+  }
+
+  const result = await checkTcpConnectivity(host, 443, 2000);
+  if (result.ok) {
+    console.log(`[startup] Supabase TCP OK ${result.host}:443 (${result.latencyMs}ms)`);
+  } else {
+    console.warn(`[startup] Supabase TCP FAIL ${result.host}:443 (${result.error})`);
+  }
+}, 0);

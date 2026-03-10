@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Pressable,
   Text,
@@ -70,6 +70,7 @@ export function Button({
   fullWidth = false,
   icon,
 }: ButtonProps) {
+  const [pressed, setPressed] = useState(false);
   const isDisabled = disabled || loading;
   const vStyle = variantStyles[variant];
   const sStyle = sizeStyles[size];
@@ -78,7 +79,9 @@ export function Button({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed }) => [
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
         {
           borderRadius: 12,
           flexDirection: 'row',
@@ -90,7 +93,7 @@ export function Button({
         },
         vStyle.container,
         sStyle.container,
-        fullWidth && { width: '100%' },
+        fullWidth ? { width: '100%' } : undefined,
       ]}
     >
       {loading ? (

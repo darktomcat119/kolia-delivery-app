@@ -32,27 +32,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+
+    // Verify restaurant_owner role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profile?.role !== 'restaurant_owner') {
+      await supabase.auth.signOut();
+      throw new Error('Accès refusé : compte restaurateur requis');
+    }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, role: 'restaurant_owner' },
       },
     });
     if (error) throw error;
-
-    // Set role to restaurant_owner
-    if (data.user) {
-      await supabase
-        .from('profiles')
-        .update({ role: 'restaurant_owner' })
-        .eq('id', data.user.id);
-    }
   };
 
   const signOut = async () => {

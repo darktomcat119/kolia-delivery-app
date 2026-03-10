@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
+import { ToastProvider } from './components/Toast';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -17,7 +18,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
-        <div className="text-[#6B6560] font-body">Chargement...</div>
+        <div className="w-7 h-7 border-2 border-secondary/20 border-t-secondary rounded-full animate-spin" />
       </div>
     );
   }
@@ -66,7 +67,7 @@ function RestaurantGuard({ children }: { children: ReactNode }) {
   if (checking) {
     return (
       <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center">
-        <div className="text-[#6B6560] font-body">Chargement...</div>
+        <div className="w-7 h-7 border-2 border-secondary/20 border-t-secondary rounded-full animate-spin" />
       </div>
     );
   }
@@ -82,6 +83,7 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           {/* Public */}
           <Route
@@ -129,6 +131,7 @@ function App() {
           {/* Redirect */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

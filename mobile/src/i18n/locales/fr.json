@@ -68,8 +68,11 @@
     "noRestaurants": "Aucun restaurant trouvé",
     "adjustFilters": "Essayez d'ajuster vos filtres",
     "deliveryFee": "Frais de livraison",
+    "freeDelivery": "Livraison gratuite",
     "minOrder": "Commande min.",
     "min": "min",
+    "nearYou": "Près de vous",
+    "filteredResults": "Résultats",
     "km": "km"
   },
   "search": {
@@ -105,8 +108,9 @@
     "proceedToCheckout": "Passer au Paiement",
     "clearCart": "Vider le panier",
     "clearCartConfirm": "Êtes-vous sûr de vouloir vider votre panier ?",
-    "differentRestaurant": "Vous avez des articles d'un autre restaurant. Vider le panier ?",
-    "replaceCart": "Remplacer le panier"
+    "differentRestaurant": "Autre restaurant",
+    "replaceCart": "Vider et ajouter",
+    "differentRestaurantMessage": "Vous avez déjà des articles d un autre restaurant. Ajouter cet article videra votre panier actuel."
   },
   "checkout": {
     "title": "Paiement",

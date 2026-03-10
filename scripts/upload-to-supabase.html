@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kolia — Upload Images to Supabase Storage</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; padding: 24px; color: #1a1a1a; }
+    h1 { font-size: 22px; margin-bottom: 6px; }
+    p.sub { color: #666; font-size: 14px; margin-bottom: 24px; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 6px; }
+    input[type=text], input[type=password] { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: monospace; }
+    button { padding: 12px 24px; background: #E07A2F; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    button:hover:not(:disabled) { background: #c96820; }
+    .log { background: #1a1a1a; color: #f0f0f0; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; line-height: 1.7; max-height: 400px; overflow-y: auto; white-space: pre-wrap; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+    .info { color: #60a5fa; }
+    .warn { color: #fbbf24; }
+    .sql-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; white-space: pre-wrap; overflow-x: auto; max-height: 400px; overflow-y: auto; }
+    .copy-btn { margin-top: 10px; padding: 8px 16px; font-size: 13px; background: #1B5E3A; }
+    h3 { margin-bottom: 10px; font-size: 15px; }
+    #sql-section { display: none; }
+  </style>
+</head>
+<body>
+  <h1>🍽️ Kolia — Upload Images to Supabase Storage</h1>
+  <p class="sub">Select the <code>scripts/images/</code> folder to upload all food images to Supabase Storage.</p>
+
+  <div class="card">
+    <label>Supabase URL</label>
+    <input type="text" id="supabase-url" value="https://axktqgrpxoucnztqqbgw.supabase.co" />
+  </div>
+
+  <div class="card">
+    <label>Service Role Key</label>
+    <input type="password" id="service-key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4a3RxZ3JweG91Y256dHFxYmd3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjY0MjY0NiwiZXhwIjoyMDg4MjE4NjQ2fQ.muYkS6zYYWE5AUvodeyvC-q-oGvSn_VroTa7JOIfLQI" />
+  </div>
+
+  <div class="card">
+    <label>Select the <strong>scripts/images/</strong> folder (contains restaurant/ and menu/ subfolders)</label>
+    <input type="file" id="folder-input" webkitdirectory multiple accept="image/*" style="margin-bottom:12px" />
+    <br/>
+    <button id="upload-btn" onclick="startUpload()">Upload All Images</button>
+  </div>
+
+  <div class="card">
+    <h3>Upload Log</h3>
+    <div class="log" id="log">Waiting to start...</div>
+  </div>
+
+  <div class="card" id="sql-section">
+    <h3>SQL to update your database</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:10px">Run this in your Supabase Dashboard → SQL Editor</p>
+    <div class="sql-box" id="sql-output"></div>
+    <button class="copy-btn" onclick="copySql()">Copy SQL</button>
+  </div>
+
+  <script>
+    const BUCKET = 'kolia-images';
+
+    const IMAGE_MAP = {
+      'restaurant/sabores-de-luanda.jpg':  { type: 'restaurant', id: '11111111-1111-1111-1111-111111111111' },
+      'restaurant/morabeza-kitchen.jpg':   { type: 'restaurant', id: '22222222-2222-2222-2222-222222222222' },
+      'restaurant/chez-fatou.jpg':         { type: 'restaurant', id: '33333333-3333-3333-3333-333333333333' },
+      'restaurant/le-ndole.jpg':           { type: 'restaurant', id: '44444444-4444-4444-4444-444444444444' },
+      'restaurant/lagos-grill-house.jpg':  { type: 'restaurant', id: '55555555-5555-5555-5555-555555555555' },
+      'restaurant/maman-congo.jpg':        { type: 'restaurant', id: '66666666-6666-6666-6666-666666666666' },
+      'restaurant/riad-essaouira.jpg':     { type: 'restaurant', id: '77777777-7777-7777-7777-777777777777' },
+      'restaurant/dakar-grenoble.jpg':     { type: 'restaurant', id: '88888888-8888-8888-8888-888888888888' },
+
+      'menu/muamba-de-galinha.jpg':        { type: 'menu', restaurant: '11111111-1111-1111-1111-111111111111', name: 'Muamba de Galinha' },
+      'menu/calulu-de-peixe.jpg':          { type: 'menu', restaurant: '11111111-1111-1111-1111-111111111111', name: 'Calulu de Peixe' },
+      'menu/funge-com-mufete.jpg':         { type: 'menu', restaurant: '11111111-1111-1111-1111-111111111111', name: 'Funge com Mufete' },
+      'menu/cachupa-rica.jpg':             { type: 'menu', restaurant: '22222222-2222-2222-2222-222222222222', name: 'Cachupa Rica' },
+      'menu/buzio-grelhado.jpg':           { type: 'menu', restaurant: '22222222-2222-2222-2222-222222222222', name: 'Buzio Grelhado' },
+      'menu/thieboudienne.jpg':            { type: 'menu', restaurant: '33333333-3333-3333-3333-333333333333', name: 'Thiéboudienne' },
+      'menu/yassa-poulet.jpg':             { type: 'menu', restaurant: '33333333-3333-3333-3333-333333333333', name: 'Yassa Poulet' },
+      'menu/mafe-boeuf.jpg':               { type: 'menu', restaurant: '33333333-3333-3333-3333-333333333333', name: 'Mafé Boeuf' },
+      'menu/ndole.jpg':                    { type: 'menu', restaurant: '44444444-4444-4444-4444-444444444444', name: 'Ndolé' },
+      'menu/poulet-dg.jpg':               { type: 'menu', restaurant: '44444444-4444-4444-4444-444444444444', name: 'Poulet DG' },
+      'menu/soya-brochettes.jpg':          { type: 'menu', restaurant: '44444444-4444-4444-4444-444444444444', name: 'Soya Brochettes' },
+      'menu/jollof-rice.jpg':             { type: 'menu', restaurant: '55555555-5555-5555-5555-555555555555', name: 'Jollof Rice' },
+      'menu/egusi-soup.jpg':              { type: 'menu', restaurant: '55555555-5555-5555-5555-555555555555', name: 'Egusi Soup avec Igname Pilé' },
+      'menu/suya.jpg':                    { type: 'menu', restaurant: '55555555-5555-5555-5555-555555555555', name: 'Suya' },
+      'menu/poulet-moambe.jpg':           { type: 'menu', restaurant: '66666666-6666-6666-6666-666666666666', name: 'Poulet à la Moambé' },
+      'menu/pondu.jpg':                   { type: 'menu', restaurant: '66666666-6666-6666-6666-666666666666', name: 'Pondu' },
+      'menu/maboke-de-poisson.jpg':       { type: 'menu', restaurant: '66666666-6666-6666-6666-666666666666', name: 'Maboke de Poisson' },
+      'menu/tajine-agneau.jpg':           { type: 'menu', restaurant: '77777777-7777-7777-7777-777777777777', name: "Tajine d'Agneau" },
+      'menu/couscous-royal.jpg':          { type: 'menu', restaurant: '77777777-7777-7777-7777-777777777777', name: 'Couscous Royal' },
+      'menu/pastilla-poulet.jpg':         { type: 'menu', restaurant: '77777777-7777-7777-7777-777777777777', name: 'Pastilla au Poulet' },
+      'menu/yassa-poulet-dakar.jpg':      { type: 'menu', restaurant: '88888888-8888-8888-8888-888888888888', name: 'Yassa Poulet' },
+      'menu/thieboudienne-dakar.jpg':     { type: 'menu', restaurant: '88888888-8888-8888-8888-888888888888', name: 'Thiéboudienne' },
+      'menu/mafe-de-boeuf.jpg':           { type: 'menu', restaurant: '88888888-8888-8888-8888-888888888888', name: 'Mafé de Bœuf' },
+    };
+
+    const logEl = document.getElementById('log');
+    const sqlEl = document.getElementById('sql-output');
+    const sqlSection = document.getElementById('sql-section');
+
+    function log(msg, cls = '') {
+      const line = document.createElement('span');
+      if (cls) line.className = cls;
+      line.textContent = msg + '\n';
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function ensureBucket(base, key) {
+      const r = await fetch(`${base}/storage/v1/bucket`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: BUCKET, name: BUCKET, public: true }),
+      });
+      if (r.status === 200 || r.status === 400) return; // 400 = already exists
+      const t = await r.text();
+      throw new Error(`Bucket creation failed: ${r.status} ${t}`);
+    }
+
+    async function uploadFile(base, key, path, file) {
+      const r = await fetch(`${base}/storage/v1/object/${BUCKET}/${path}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Content-Type': 'image/jpeg',
+          'x-upsert': 'true',
+        },
+        body: file,
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`${r.status}: ${t}`);
+      }
+      return `${base}/storage/v1/object/public/${BUCKET}/${path}`;
+    }
+
+    async function startUpload() {
+      const base = document.getElementById('supabase-url').value.trim().replace(/\/$/, '');
+      const key  = document.getElementById('service-key').value.trim();
+      const input = document.getElementById('folder-input');
+
+      if (!base || !key) { alert('Fill in Supabase URL and service key'); return; }
+      if (!input.files.length) { alert('Select the images/ folder first'); return; }
+
+      document.getElementById('upload-btn').disabled = true;
+      logEl.textContent = '';
+
+      log(`Starting upload to ${base}`, 'info');
+      log(`Creating/checking bucket "${BUCKET}"...`);
+
+      try {
+        await ensureBucket(base, key);
+        log(`✓ Bucket ready`, 'ok');
+      } catch (e) {
+        log(`✗ ${e.message}`, 'err');
+        document.getElementById('upload-btn').disabled = false;
+        return;
+      }
+
+      const uploadedUrls = {};
+      let ok = 0, fail = 0;
+
+      // Normalize file paths to key format
+      for (const file of input.files) {
+        // webkitRelativePath looks like: "images/restaurant/chez-fatou.jpg"
+        // We need: "restaurant/chez-fatou.jpg"
+        const rel = file.webkitRelativePath;
+        const parts = rel.split('/');
+        // Drop first folder (images/) → restaurant/chez-fatou.jpg
+        const storagePath = parts.slice(1).join('/');
+
+        if (!IMAGE_MAP[storagePath]) {
+          log(`  skip ${storagePath} (not in map)`, 'warn');
+          continue;
+        }
+
+        log(`  Uploading ${storagePath}...`);
+        try {
+          const url = await uploadFile(base, key, storagePath, file);
+          uploadedUrls[storagePath] = url;
+          log(`  ✓ ${storagePath}`, 'ok');
+          ok++;
+        } catch (e) {
+          log(`  ✗ ${storagePath}: ${e.message}`, 'err');
+          fail++;
+        }
+      }
+
+      log(`\nDone: ${ok} uploaded, ${fail} failed`, ok > 0 ? 'ok' : 'err');
+
+      // Generate SQL
+      if (Object.keys(uploadedUrls).length > 0) {
+        generateSQL(uploadedUrls);
+        sqlSection.style.display = 'block';
+      }
+
+      document.getElementById('upload-btn').disabled = false;
+    }
+
+    function generateSQL(urls) {
+      let sql = '-- Run in Supabase Dashboard → SQL Editor\n\n';
+      sql += '-- Restaurant cover images\n';
+
+      for (const [path, url] of Object.entries(urls)) {
+        const info = IMAGE_MAP[path];
+        if (!info) continue;
+
+        if (info.type === 'restaurant') {
+          sql += `UPDATE public.restaurants SET image_url = '${url}' WHERE id = '${info.id}';\n`;
+        }
+      }
+
+      sql += '\n-- Menu item images\n';
+      for (const [path, url] of Object.entries(urls)) {
+        const info = IMAGE_MAP[path];
+        if (!info || info.type !== 'menu') continue;
+        const name = info.name.replace(/'/g, "''");
+        sql += `UPDATE public.menu_items SET image_url = '${url}' WHERE restaurant_id = '${info.restaurant}' AND name = '${name}';\n`;
+      }
+
+      sqlEl.textContent = sql;
+    }
+
+    function copySql() {
+      navigator.clipboard.writeText(sqlEl.textContent).then(() => alert('SQL copied!'));
+    }
+  </script>
+</body>
+</html>

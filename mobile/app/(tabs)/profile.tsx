@@ -23,11 +23,10 @@ import {
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
-import * as Notifications from 'expo-notifications';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useLocationStore } from '../../src/stores/locationStore';
 import { getCurrentLocation } from '../../src/services/location';
-import { registerForPushNotifications } from '../../src/services/notifications';
+import { registerForPushNotifications, getNotificationPermissionStatus } from '../../src/services/notifications';
 import { supabase } from '../../src/lib/supabase';
 import { LanguageSelector } from '../../src/components/common/LanguageSelector';
 import {
@@ -36,6 +35,7 @@ import {
   FONT_SIZES,
   BORDER_RADIUS,
   SPACING,
+  SHADOWS,
 } from '../../src/config/constants';
 
 interface SettingsRowProps {
@@ -492,9 +492,7 @@ export default function ProfileScreen() {
 
   // Check notification permission on mount
   useEffect(() => {
-    Notifications.getPermissionsAsync().then(({ status }) => {
-      setNotificationsEnabled(status === 'granted');
-    });
+    getNotificationPermissionStatus().then(setNotificationsEnabled);
   }, []);
 
   const handleToggleNotifications = async () => {
@@ -554,15 +552,40 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {/* User info */}
-        <View style={{ alignItems: 'center', marginBottom: 32 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* User info with gradient header */}
+        <View
+          style={{
+            backgroundColor: COLORS.secondary,
+            paddingTop: 48,
+            paddingBottom: 32,
+            paddingHorizontal: 20,
+            alignItems: 'center',
+            borderBottomLeftRadius: 28,
+            borderBottomRightRadius: 28,
+            marginBottom: 24,
+          }}
+        >
+          {/* Decorative circle */}
           <View
             style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: COLORS.primary,
+              position: 'absolute',
+              top: -30,
+              right: -30,
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              backgroundColor: 'rgba(255,255,255,0.05)',
+            }}
+          />
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              borderWidth: 3,
+              borderColor: 'rgba(255,255,255,0.3)',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: 12,
@@ -580,9 +603,9 @@ export default function ProfileScreen() {
           </View>
           <Text
             style={{
-              fontFamily: FONT_FAMILIES.bodySemibold,
-              fontSize: FONT_SIZES['2xl'],
-              color: COLORS.textPrimary,
+              fontFamily: FONT_FAMILIES.display,
+              fontSize: 22,
+              color: '#FFFFFF',
             }}
           >
             {user?.full_name ?? ''}
@@ -591,7 +614,7 @@ export default function ProfileScreen() {
             style={{
               fontFamily: FONT_FAMILIES.body,
               fontSize: 14,
-              color: COLORS.textSecondary,
+              color: 'rgba(255,255,255,0.6)',
               marginTop: 4,
             }}
           >
@@ -603,8 +626,10 @@ export default function ProfileScreen() {
         <View
           style={{
             backgroundColor: COLORS.surface,
-            borderRadius: 16,
+            borderRadius: 20,
             padding: 8,
+            marginHorizontal: 20,
+            ...SHADOWS.card,
           }}
         >
           <SettingsRow

@@ -1,8 +1,44 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Check, Pencil, X, Plus } from 'lucide-react';
+import { Check, Pencil, X, Plus, AlertTriangle } from 'lucide-react';
 import { api } from '../lib/api';
 import type { Restaurant, MenuCategory, MenuItem, DietaryTag } from '../lib/types';
 import { DIETARY_LABELS } from '../lib/types';
+import { useToast } from '../components/Toast';
+
+interface ConfirmModalProps {
+  message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-[#FEF3C7] flex items-center justify-center shrink-0">
+            <AlertTriangle size={20} className="text-[#D97706]" />
+          </div>
+          <p className="text-sm font-body text-[#1A1A1A]">{message}</p>
+        </div>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 rounded-xl border border-border text-sm font-body hover:bg-surface-hover transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 rounded-xl bg-[#DC2626] text-white text-sm font-body hover:bg-[#B91C1C] transition-colors"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const ALL_DIETARY_TAGS: DietaryTag[] = [
   'halal', 'vegan', 'vegetarian', 'spicy', 'gluten_free', 'contains_nuts',
@@ -29,6 +65,7 @@ const EMPTY_ITEM: ItemFormState = {
 };
 
 export function MenuEditor() {
+  const { showToast } = useToast();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -44,6 +81,12 @@ export function MenuEditor() {
   const [showItemForm, setShowItemForm] = useState(false);
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [itemForm, setItemForm] = useState<ItemFormState>(EMPTY_ITEM);
+
+  // Confirm modal
+  const [confirmModal, setConfirmModal] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,8 +124,9 @@ export function MenuEditor() {
       setCategories((prev) => [...prev, data]);
       setActiveCategory(data.id);
       setNewCategoryName('');
-    } catch (err) {
-      console.error('Failed to add category:', err);
+      showToast('Catégorie ajoutée');
+    } catch {
+      showToast('Échec de l\'ajout de la catégorie', 'error');
     }
   };
 
@@ -99,28 +143,35 @@ export function MenuEditor() {
         ),
       );
       setEditingCategory(null);
-    } catch (err) {
-      console.error('Failed to update category:', err);
+      showToast('Catégorie mise à jour');
+    } catch {
+      showToast('Échec de la mise à jour', 'error');
     }
   };
 
-  const handleDeleteCategory = async (categoryId: string) => {
+  const handleDeleteCategory = (categoryId: string) => {
     const catItems = items.filter((i) => i.category_id === categoryId);
-    if (catItems.length > 0) {
-      if (!window.confirm(`Cette catégorie contient ${catItems.length} plat(s). Tout supprimer ?`))
-        return;
-    }
+    const message = catItems.length > 0
+      ? `Cette catégorie contient ${catItems.length} plat(s). Tout supprimer ?`
+      : 'Supprimer cette catégorie ?';
 
-    try {
-      await api.delete(`/api/owner/categories/${categoryId}`);
-      setCategories((prev) => prev.filter((c) => c.id !== categoryId));
-      setItems((prev) => prev.filter((i) => i.category_id !== categoryId));
-      if (activeCategory === categoryId) {
-        setActiveCategory(categories.find((c) => c.id !== categoryId)?.id ?? null);
-      }
-    } catch (err) {
-      console.error('Failed to delete category:', err);
-    }
+    setConfirmModal({
+      message,
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          await api.delete(`/api/owner/categories/${categoryId}`);
+          setCategories((prev) => prev.filter((c) => c.id !== categoryId));
+          setItems((prev) => prev.filter((i) => i.category_id !== categoryId));
+          if (activeCategory === categoryId) {
+            setActiveCategory(categories.find((c) => c.id !== categoryId)?.id ?? null);
+          }
+          showToast('Catégorie supprimée');
+        } catch {
+          showToast('Échec de la suppression', 'error');
+        }
+      },
+    });
   };
 
   // Item actions
@@ -137,8 +188,9 @@ export function MenuEditor() {
       setItems((prev) => [...prev, data]);
       setItemForm(EMPTY_ITEM);
       setShowItemForm(false);
-    } catch (err) {
-      console.error('Failed to add item:', err);
+      showToast('Plat ajouté');
+    } catch {
+      showToast('Échec de l\'ajout du plat', 'error');
     }
   };
 
@@ -152,20 +204,26 @@ export function MenuEditor() {
       setEditingItem(null);
       setItemForm(EMPTY_ITEM);
       setShowItemForm(false);
-    } catch (err) {
-      console.error('Failed to update item:', err);
+      showToast('Plat mis à jour');
+    } catch {
+      showToast('Échec de la mise à jour', 'error');
     }
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    if (!window.confirm('Supprimer ce plat ?')) return;
-
-    try {
-      await api.delete(`/api/owner/items/${itemId}`);
-      setItems((prev) => prev.filter((i) => i.id !== itemId));
-    } catch (err) {
-      console.error('Failed to delete item:', err);
-    }
+  const handleDeleteItem = (itemId: string) => {
+    setConfirmModal({
+      message: 'Supprimer ce plat ?',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          await api.delete(`/api/owner/items/${itemId}`);
+          setItems((prev) => prev.filter((i) => i.id !== itemId));
+          showToast('Plat supprimé');
+        } catch {
+          showToast('Échec de la suppression', 'error');
+        }
+      },
+    });
   };
 
   const handleToggleAvailable = async (itemId: string, current: boolean) => {
@@ -174,8 +232,8 @@ export function MenuEditor() {
       setItems((prev) =>
         prev.map((i) => (i.id === itemId ? { ...i, is_available: !current } : i)),
       );
-    } catch (err) {
-      console.error('Failed to toggle availability:', err);
+    } catch {
+      showToast('Échec de la mise à jour', 'error');
     }
   };
 
@@ -227,6 +285,14 @@ export function MenuEditor() {
 
   return (
     <div>
+      {confirmModal && (
+        <ConfirmModal
+          message={confirmModal.message}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+      )}
+
       <h1 className="text-2xl font-semibold font-body mb-6">
         Menu — {restaurant.name}
       </h1>

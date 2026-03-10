@@ -1,7 +1,8 @@
-import React, { useEffect, useCallback } from 'react';
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import React, { useEffect, useCallback, useMemo } from 'react';
+import { View, Text, FlatList, RefreshControl, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { MapPin } from 'lucide-react-native';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useRestaurantStore } from '../../src/stores/restaurantStore';
 import { useLocationStore } from '../../src/stores/locationStore';
@@ -19,7 +20,7 @@ import type { Restaurant } from '../../src/types';
 export default function HomeScreen() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
-  const { latitude, longitude } = useLocationStore();
+  const { latitude, longitude, address } = useLocationStore();
   const {
     isLoading,
     selectedCuisine,
@@ -64,19 +65,80 @@ export default function HomeScreen() {
     return a.name.localeCompare(b.name);
   });
 
-  const renderHeader = () => (
+  const header = useMemo(() => (
     <View>
-      {/* Greeting */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
+      {/* Header area */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
+        {/* Top row: Logo + Location */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ height: 32, width: 110, resizeMode: 'contain' }}
+          />
+          {address ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: COLORS.surface,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: COLORS.borderLight,
+              }}
+            >
+              <MapPin size={14} color={COLORS.primary} />
+              <Text
+                style={{
+                  fontFamily: FONT_FAMILIES.bodyMedium,
+                  fontSize: 12,
+                  color: COLORS.textSecondary,
+                  maxWidth: 120,
+                }}
+                numberOfLines={1}
+              >
+                {address}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Greeting */}
         <Text
           style={{
             fontFamily: FONT_FAMILIES.display,
-            fontSize: FONT_SIZES['4xl'],
+            fontSize: 28,
             color: COLORS.textPrimary,
+            lineHeight: 36,
+            marginBottom: 4,
           }}
         >
-          {t(greetingKey)}{firstName ? `, ${firstName}` : ''}
+          {t(greetingKey)}{firstName ? ',' : ''}
         </Text>
+        {firstName ? (
+          <Text
+            style={{
+              fontFamily: FONT_FAMILIES.display,
+              fontSize: 28,
+              color: COLORS.primary,
+              lineHeight: 36,
+              marginBottom: 16,
+            }}
+          >
+            {firstName}
+          </Text>
+        ) : (
+          <View style={{ marginBottom: 16 }} />
+        )}
       </View>
 
       {/* Search Bar */}
@@ -90,8 +152,21 @@ export default function HomeScreen() {
         selected={selectedCuisine}
         onSelect={setSelectedCuisine}
       />
+
+      {/* Section title */}
+      <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>
+        <Text
+          style={{
+            fontFamily: FONT_FAMILIES.bodySemibold,
+            fontSize: 18,
+            color: COLORS.textPrimary,
+          }}
+        >
+          {selectedCuisine ? t('home.filteredResults') : t('home.nearYou')}
+        </Text>
+      </View>
     </View>
-  );
+  ), [greetingKey, firstName, searchQuery, selectedCuisine, address, setSearchQuery, setSelectedCuisine, t]);
 
   const renderEmpty = () => {
     if (isLoading) {
@@ -127,7 +202,7 @@ export default function HomeScreen() {
             />
           </View>
         )}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={header}
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl

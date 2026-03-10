@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Pressable, Image } from 'react-native';
-import { Star } from 'lucide-react-native';
+import { Star, Clock, MapPin, Truck } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import type { Restaurant } from '../../types';
-import { COLORS, FONT_FAMILIES, SHADOWS, BORDER_RADIUS } from '../../config/constants';
+import { COLORS, FONT_FAMILIES, SHADOWS } from '../../config/constants';
 import { formatPrice, formatDeliveryTime, formatDistance } from '../../utils/formatters';
 import { isRestaurantOpen } from '../../utils/openingHours';
-import { Badge } from '../ui/Badge';
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -28,22 +27,26 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
   const router = useRouter();
   const { t } = useTranslation();
   const open = isRestaurantOpen(restaurant.opening_hours);
+  const [pressed, setPressed] = useState(false);
 
   return (
     <Pressable
       onPress={() => router.push(`/restaurant/${restaurant.id}`)}
-      style={({ pressed }) => ({
-        backgroundColor: COLORS.surface,
-        borderRadius: BORDER_RADIUS.card,
-        overflow: 'hidden',
-        marginBottom: 16,
-        opacity: pressed ? 0.95 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-        ...SHADOWS.card,
-      })}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[
+        {
+          backgroundColor: COLORS.surface,
+          borderRadius: 20,
+          overflow: 'hidden',
+          marginBottom: 20,
+          transform: [{ scale: pressed ? 0.97 : 1 }],
+        },
+        SHADOWS.elevated,
+      ]}
     >
       {/* Image */}
-      <View style={{ height: 180, backgroundColor: COLORS.skeleton }}>
+      <View style={{ height: 190, backgroundColor: COLORS.skeleton }}>
         {restaurant.image_url ? (
           <Image
             source={{ uri: restaurant.image_url }}
@@ -59,9 +62,21 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
               backgroundColor: COLORS.primaryMuted,
             }}
           >
-            <Text style={{ fontSize: 48 }}>🍽️</Text>
+            <Text style={{ fontSize: 56 }}>🍽️</Text>
           </View>
         )}
+
+        {/* Gradient overlay at bottom of image */}
+        <View
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            backgroundColor: 'transparent',
+          }}
+        />
 
         {/* Closed overlay */}
         {!open && (
@@ -72,20 +87,30 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.4)',
+              backgroundColor: 'rgba(0,0,0,0.45)',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text
+            <View
               style={{
-                fontFamily: FONT_FAMILIES.bodySemibold,
-                fontSize: 14,
-                color: '#FFFFFF',
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                paddingHorizontal: 20,
+                paddingVertical: 8,
+                borderRadius: 24,
               }}
             >
-              {t('restaurant.closed')}
-            </Text>
+              <Text
+                style={{
+                  fontFamily: FONT_FAMILIES.bodySemibold,
+                  fontSize: 14,
+                  color: '#FFFFFF',
+                  letterSpacing: 0.5,
+                }}
+              >
+                {t('restaurant.closed')}
+              </Text>
+            </View>
           </View>
         )}
 
@@ -96,21 +121,21 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
               position: 'absolute',
               top: 12,
               right: 12,
-              backgroundColor: COLORS.surface,
-              borderRadius: 20,
-              paddingHorizontal: 8,
-              paddingVertical: 4,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 24,
+              paddingHorizontal: 10,
+              paddingVertical: 6,
               flexDirection: 'row',
               alignItems: 'center',
               gap: 4,
-              ...SHADOWS.card,
+              ...SHADOWS.elevated,
             }}
           >
-            <Star size={12} color={COLORS.accent} fill={COLORS.accent} />
+            <Star size={13} color={COLORS.accent} fill={COLORS.accent} />
             <Text
               style={{
                 fontFamily: FONT_FAMILIES.bodySemibold,
-                fontSize: 12,
+                fontSize: 13,
                 color: COLORS.textPrimary,
               }}
             >
@@ -118,30 +143,46 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
             </Text>
           </View>
         )}
+
+        {/* Cuisine badge */}
+        <View
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            backgroundColor: COLORS.secondary,
+            borderRadius: 20,
+            paddingHorizontal: 12,
+            paddingVertical: 5,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: FONT_FAMILIES.bodyMedium,
+              fontSize: 11,
+              color: '#FFFFFF',
+              letterSpacing: 0.3,
+            }}
+          >
+            {CUISINE_LABELS[restaurant.cuisine_type] ?? restaurant.cuisine_type}
+          </Text>
+        </View>
       </View>
 
       {/* Content */}
       <View style={{ padding: 16 }}>
-        {/* Name + Cuisine */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <Text
-            style={{
-              fontFamily: FONT_FAMILIES.bodySemibold,
-              fontSize: 16,
-              color: COLORS.textPrimary,
-              flex: 1,
-            }}
-            numberOfLines={1}
-          >
-            {restaurant.name}
-          </Text>
-          <Badge
-            label={CUISINE_LABELS[restaurant.cuisine_type] ?? restaurant.cuisine_type}
-            color={COLORS.primary}
-            backgroundColor={COLORS.primaryMuted}
-            size="sm"
-          />
-        </View>
+        {/* Name */}
+        <Text
+          style={{
+            fontFamily: FONT_FAMILIES.display,
+            fontSize: 18,
+            color: COLORS.textPrimary,
+            marginBottom: 4,
+          }}
+          numberOfLines={1}
+        >
+          {restaurant.name}
+        </Text>
 
         {/* Description */}
         {restaurant.description && (
@@ -150,7 +191,8 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
               fontFamily: FONT_FAMILIES.body,
               fontSize: 13,
               color: COLORS.textSecondary,
-              marginBottom: 8,
+              marginBottom: 12,
+              lineHeight: 18,
             }}
             numberOfLines={1}
           >
@@ -158,58 +200,50 @@ export function RestaurantCard({ restaurant, distanceKm }: RestaurantCardProps) 
           </Text>
         )}
 
-        {/* Info row */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-          <Text
-            style={{
-              fontFamily: FONT_FAMILIES.body,
-              fontSize: 12,
-              color: COLORS.textSecondary,
-            }}
-          >
-            {formatDeliveryTime(restaurant.estimated_delivery_min, restaurant.estimated_delivery_max)} {t('home.min')}
-          </Text>
+        {/* Info chips */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Clock size={13} color={COLORS.textTertiary} />
+            <Text
+              style={{
+                fontFamily: FONT_FAMILIES.bodyMedium,
+                fontSize: 12,
+                color: COLORS.textSecondary,
+              }}
+            >
+              {formatDeliveryTime(restaurant.estimated_delivery_min, restaurant.estimated_delivery_max)} {t('home.min')}
+            </Text>
+          </View>
 
           {distanceKm !== undefined && (
-            <>
-              <Text style={{ color: COLORS.textTertiary, fontSize: 12 }}>·</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <MapPin size={13} color={COLORS.textTertiary} />
               <Text
                 style={{
-                  fontFamily: FONT_FAMILIES.body,
+                  fontFamily: FONT_FAMILIES.bodyMedium,
                   fontSize: 12,
                   color: COLORS.textSecondary,
                 }}
               >
                 {formatDistance(distanceKm)}
               </Text>
-            </>
+            </View>
           )}
 
-          <Text style={{ color: COLORS.textTertiary, fontSize: 12 }}>·</Text>
-          <Text
-            style={{
-              fontFamily: FONT_FAMILIES.body,
-              fontSize: 12,
-              color: COLORS.textSecondary,
-            }}
-          >
-            {t('home.deliveryFee')} {formatPrice(restaurant.delivery_fee)}
-          </Text>
-
-          {restaurant.minimum_order > 0 && (
-            <>
-              <Text style={{ color: COLORS.textTertiary, fontSize: 12 }}>·</Text>
-              <Text
-                style={{
-                  fontFamily: FONT_FAMILIES.body,
-                  fontSize: 12,
-                  color: COLORS.textSecondary,
-                }}
-              >
-                {t('home.minOrder')} {formatPrice(restaurant.minimum_order)}
-              </Text>
-            </>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Truck size={13} color={COLORS.textTertiary} />
+            <Text
+              style={{
+                fontFamily: FONT_FAMILIES.bodyMedium,
+                fontSize: 12,
+                color: COLORS.textSecondary,
+              }}
+            >
+              {restaurant.delivery_fee === 0
+                ? t('home.freeDelivery')
+                : formatPrice(restaurant.delivery_fee)}
+            </Text>
+          </View>
         </View>
       </View>
     </Pressable>

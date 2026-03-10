@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 import type { Restaurant, CuisineType } from '../lib/types';
@@ -115,357 +115,329 @@ export function RestaurantEdit() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-[#6B6560] font-body">Chargement...</div>
+        <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl">
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/restaurants')}
-          className="text-[#6B6560] hover:text-[#1A1A1A] transition-colors"
-        >
-          <ArrowLeft size={18} className="inline -mt-0.5" /> Retour
-        </button>
-        <h1 className="text-2xl font-semibold font-body">
-          {isNew ? 'Nouveau restaurant' : 'Modifier le restaurant'}
-        </h1>
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/restaurants')}
+            className="flex items-center gap-1.5 text-sm text-[#9C9690] hover:text-[#1A1A1A] transition-colors font-body"
+          >
+            <ArrowLeft size={16} />
+            Retour
+          </button>
+          <span className="text-[#C4C0BB]">/</span>
+          <h1 className="text-xl font-semibold font-body text-[#1A1A1A]">
+            {isNew ? 'Nouveau restaurant' : 'Modifier le restaurant'}
+          </h1>
+        </div>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/restaurants')}
+            className="px-5 py-2.5 rounded-2xl border border-[#E5E3E0] text-sm font-body font-medium text-[#6B6560] hover:bg-[#F5F3F0] transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            form="restaurant-form"
+            type="submit"
+            disabled={saving}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-primary text-white font-body font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-sm shadow-primary/20"
+          >
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+            {saving ? 'Enregistrement...' : isNew ? 'Créer' : 'Enregistrer'}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <div className="mb-6 p-4 rounded-xl bg-[#FDE8E8] text-[#DC2626] text-sm font-body">
-          {error}
+        <div className="mb-6 flex items-start gap-3 p-4 rounded-2xl bg-red-50 border border-red-100">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
+          <p className="text-red-700 text-sm font-body">{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Info */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Informations générales</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Nom *
-              </label>
-              <input
-                type="text"
-                value={form.name ?? ''}
-                onChange={(e) => updateField('name', e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
+      <form id="restaurant-form" onSubmit={handleSubmit}>
+        {/* Two-column grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+          {/* Left column */}
+          <div className="space-y-5">
+            {/* Basic Info */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
+              <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Informations générales</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Nom *</label>
+                  <input
+                    type="text"
+                    value={form.name ?? ''}
+                    onChange={(e) => updateField('name', e.target.value)}
+                    required
+                    placeholder="Nom du restaurant"
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Description</label>
+                  <textarea
+                    value={form.description ?? ''}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    rows={3}
+                    placeholder="Décrivez votre restaurant..."
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all resize-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Type de cuisine *</label>
+                    <select
+                      value={form.cuisine_type ?? 'west_african'}
+                      onChange={(e) => updateField('cuisine_type', e.target.value as CuisineType)}
+                      className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all bg-white"
+                    >
+                      {CUISINE_OPTIONS.map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Téléphone</label>
+                    <input
+                      type="text"
+                      value={form.phone ?? ''}
+                      onChange={(e) => updateField('phone', e.target.value)}
+                      placeholder="+33 1 23 45 67 89"
+                      className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Description
-              </label>
-              <textarea
-                value={form.description ?? ''}
-                onChange={(e) => updateField('description', e.target.value)}
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary resize-none"
-              />
+
+            {/* Images */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
+              <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Images</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">URL de l'image de couverture</label>
+                  <input
+                    type="url"
+                    value={form.image_url ?? ''}
+                    onChange={(e) => updateField('image_url', e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                  {form.image_url && (
+                    <img src={form.image_url} alt="Aperçu" className="mt-2 h-24 w-full object-cover rounded-xl border border-border-light" />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">URL du logo</label>
+                  <input
+                    type="url"
+                    value={form.logo_url ?? ''}
+                    onChange={(e) => updateField('logo_url', e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Type de cuisine *
-              </label>
-              <select
-                value={form.cuisine_type ?? 'west_african'}
-                onChange={(e) =>
-                  updateField('cuisine_type', e.target.value as CuisineType)
-                }
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              >
-                {CUISINE_OPTIONS.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
+          </div>
+
+          {/* Right column */}
+          <div className="space-y-5">
+            {/* Location */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
+              <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Adresse & Localisation</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Adresse *</label>
+                  <input
+                    type="text"
+                    value={form.address ?? ''}
+                    onChange={(e) => updateField('address', e.target.value)}
+                    required
+                    placeholder="12 rue des Saveurs"
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Ville *</label>
+                    <input
+                      type="text"
+                      value={form.city ?? ''}
+                      onChange={(e) => updateField('city', e.target.value)}
+                      required
+                      placeholder="Paris"
+                      className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Pays *</label>
+                    <input
+                      type="text"
+                      value={form.country ?? ''}
+                      onChange={(e) => updateField('country', e.target.value)}
+                      required
+                      maxLength={2}
+                      placeholder="FR"
+                      className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Latitude *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={form.latitude ?? 0}
+                      onChange={(e) => updateField('latitude', Number(e.target.value))}
+                      required
+                      className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Longitude *</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={form.longitude ?? 0}
+                      onChange={(e) => updateField('longitude', Number(e.target.value))}
+                      required
+                      className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Téléphone
-              </label>
-              <input
-                type="text"
-                value={form.phone ?? ''}
-                onChange={(e) => updateField('phone', e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
+
+            {/* Delivery Settings */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
+              <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Paramètres de livraison</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Frais de livraison (€)</label>
+                  <input
+                    type="number"
+                    step="0.50"
+                    min="0"
+                    value={form.delivery_fee ?? 3.5}
+                    onChange={(e) => updateField('delivery_fee', Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Commande minimum (€)</label>
+                  <input
+                    type="number"
+                    step="0.50"
+                    min="0"
+                    value={form.minimum_order ?? 12}
+                    onChange={(e) => updateField('minimum_order', Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Délai min. (min)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.estimated_delivery_min ?? 30}
+                    onChange={(e) => updateField('estimated_delivery_min', Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Délai max. (min)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={form.estimated_delivery_max ?? 45}
+                    onChange={(e) => updateField('estimated_delivery_max', Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Rayon (km)</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0"
+                    value={form.delivery_radius_km ?? 5}
+                    onChange={(e) => updateField('delivery_radius_km', Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-6">
+                  <input
+                    type="checkbox"
+                    id="pickup"
+                    checked={form.pickup_available ?? true}
+                    onChange={(e) => updateField('pickup_available', e.target.checked)}
+                    className="w-4 h-4 rounded accent-primary"
+                  />
+                  <label htmlFor="pickup" className="text-sm font-body text-[#6B6560]">Retrait disponible</label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Location */}
+        {/* Opening Hours — full width */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Adresse & Localisation</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Adresse *
-              </label>
-              <input
-                type="text"
-                value={form.address ?? ''}
-                onChange={(e) => updateField('address', e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Ville *
-              </label>
-              <input
-                type="text"
-                value={form.city ?? ''}
-                onChange={(e) => updateField('city', e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Pays (code à 2 lettres) *
-              </label>
-              <input
-                type="text"
-                value={form.country ?? ''}
-                onChange={(e) => updateField('country', e.target.value)}
-                required
-                maxLength={2}
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Latitude *
-              </label>
-              <input
-                type="number"
-                step="any"
-                value={form.latitude ?? 0}
-                onChange={(e) => updateField('latitude', Number(e.target.value))}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Longitude *
-              </label>
-              <input
-                type="number"
-                step="any"
-                value={form.longitude ?? 0}
-                onChange={(e) => updateField('longitude', Number(e.target.value))}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Delivery Settings */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">
-            Paramètres de livraison
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Frais de livraison (€)
-              </label>
-              <input
-                type="number"
-                step="0.50"
-                min="0"
-                value={form.delivery_fee ?? 3.5}
-                onChange={(e) =>
-                  updateField('delivery_fee', Number(e.target.value))
-                }
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Commande minimum (€)
-              </label>
-              <input
-                type="number"
-                step="0.50"
-                min="0"
-                value={form.minimum_order ?? 12}
-                onChange={(e) =>
-                  updateField('minimum_order', Number(e.target.value))
-                }
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Délai min. (minutes)
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={form.estimated_delivery_min ?? 30}
-                onChange={(e) =>
-                  updateField('estimated_delivery_min', Number(e.target.value))
-                }
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Délai max. (minutes)
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={form.estimated_delivery_max ?? 45}
-                onChange={(e) =>
-                  updateField('estimated_delivery_max', Number(e.target.value))
-                }
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                Rayon de livraison (km)
-              </label>
-              <input
-                type="number"
-                step="0.5"
-                min="0"
-                value={form.delivery_radius_km ?? 5}
-                onChange={(e) =>
-                  updateField('delivery_radius_km', Number(e.target.value))
-                }
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div className="flex items-center gap-3 pt-6">
-              <input
-                type="checkbox"
-                id="pickup"
-                checked={form.pickup_available ?? true}
-                onChange={(e) =>
-                  updateField('pickup_available', e.target.checked)
-                }
-                className="w-4 h-4 rounded accent-primary"
-              />
-              <label htmlFor="pickup" className="text-sm font-body">
-                Retrait disponible
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Images */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">Images</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                URL de l'image de couverture
-              </label>
-              <input
-                type="url"
-                value={form.image_url ?? ''}
-                onChange={(e) => updateField('image_url', e.target.value)}
-                placeholder="https://..."
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">
-                URL du logo
-              </label>
-              <input
-                type="url"
-                value={form.logo_url ?? ''}
-                onChange={(e) => updateField('logo_url', e.target.value)}
-                placeholder="https://..."
-                className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Opening Hours */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-          <h2 className="text-lg font-semibold font-body mb-4">
-            Horaires d'ouverture
-          </h2>
-          <div className="space-y-3">
+          <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Horaires d'ouverture</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             {DAYS.map((day) => {
               const hours = form.opening_hours?.[day];
               const isClosed = !hours;
-
               return (
-                <div key={day} className="flex items-center gap-4">
-                  <span className="w-24 text-sm font-body font-medium">
-                    {DAY_LABELS[day] ?? day}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => toggleDayClosed(day)}
-                    className={`px-3 py-1 rounded-full text-xs font-body ${
-                      isClosed
-                        ? 'bg-[#FDE8E8] text-[#DC2626]'
-                        : 'bg-[#E8F9EE] text-[#16A34A]'
-                    }`}
-                  >
-                    {isClosed ? 'Fermé' : 'Ouvert'}
-                  </button>
+                <div key={day} className={`p-3 rounded-xl border transition-colors ${isClosed ? 'border-[#E5E3E0] bg-[#FAFAF7]' : 'border-primary/20 bg-primary/5'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body font-semibold text-[#1A1A1A]">{DAY_LABELS[day]}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggleDayClosed(day)}
+                      className={`px-2 py-0.5 rounded-full text-xs font-body font-medium transition-colors ${
+                        isClosed ? 'bg-[#FDE8E8] text-[#DC2626]' : 'bg-[#E8F9EE] text-[#16A34A]'
+                      }`}
+                    >
+                      {isClosed ? 'Fermé' : 'Ouvert'}
+                    </button>
+                  </div>
                   {!isClosed && (
-                    <>
+                    <div className="flex items-center gap-1.5">
                       <input
                         type="time"
                         value={hours.open}
-                        onChange={(e) =>
-                          updateHours(day, 'open', e.target.value)
-                        }
-                        className="px-3 py-1.5 rounded-lg border border-border font-body text-sm"
+                        onChange={(e) => updateHours(day, 'open', e.target.value)}
+                        className="flex-1 px-2 py-1.5 rounded-lg border border-border font-body text-xs focus:outline-none focus:border-primary bg-white"
                       />
-                      <span className="text-sm text-[#6B6560]">à</span>
+                      <span className="text-[#9C9690] text-xs">–</span>
                       <input
                         type="time"
                         value={hours.close}
-                        onChange={(e) =>
-                          updateHours(day, 'close', e.target.value)
-                        }
-                        className="px-3 py-1.5 rounded-lg border border-border font-body text-sm"
+                        onChange={(e) => updateHours(day, 'close', e.target.value)}
+                        className="flex-1 px-2 py-1.5 rounded-lg border border-border font-body text-xs focus:outline-none focus:border-primary bg-white"
                       />
-                    </>
+                    </div>
+                  )}
+                  {isClosed && (
+                    <p className="text-xs text-[#C4C0BB] font-body">Fermé ce jour</p>
                   )}
                 </div>
               );
             })}
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-8 py-3 rounded-xl bg-primary text-white font-body font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50"
-          >
-            {saving ? 'Enregistrement...' : isNew ? 'Créer le restaurant' : 'Enregistrer'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/restaurants')}
-            className="px-8 py-3 rounded-xl border border-border text-sm font-body font-medium hover:bg-surface-hover transition-colors"
-          >
-            Annuler
-          </button>
         </div>
       </form>
     </div>

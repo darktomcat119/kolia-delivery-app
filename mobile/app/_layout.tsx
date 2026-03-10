@@ -80,6 +80,10 @@ export default function RootLayout() {
       <StripeProvider publishableKey={ENV.STRIPE_PUBLISHABLE_KEY}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />
+          <Stack.Screen
+            name="onboarding"
+            options={{ animation: 'fade' }}
+          />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen

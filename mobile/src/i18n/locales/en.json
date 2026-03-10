@@ -68,8 +68,11 @@
     "noRestaurants": "No restaurants found",
     "adjustFilters": "Try adjusting your filters",
     "deliveryFee": "Delivery fee",
+    "freeDelivery": "Free delivery",
     "minOrder": "Min. order",
     "min": "min",
+    "nearYou": "Near you",
+    "filteredResults": "Results",
     "km": "km"
   },
   "search": {
@@ -105,8 +108,9 @@
     "proceedToCheckout": "Proceed to Checkout",
     "clearCart": "Clear cart",
     "clearCartConfirm": "Are you sure you want to clear your cart?",
-    "differentRestaurant": "You have items from another restaurant. Clear cart?",
-    "replaceCart": "Replace cart"
+    "differentRestaurant": "Different restaurant",
+    "replaceCart": "Clear cart & add",
+    "differentRestaurantMessage": "You already have items from another restaurant. Adding this item will clear your current cart."
   },
   "checkout": {
     "title": "Checkout",
@@ -146,7 +150,8 @@
     "title": "My Orders",
     "empty": "No orders yet",
     "exploreRestaurants": "Explore Restaurants",
-    "items": "items"
+    "items": "items",
+    "totalOrders": "orders"
   },
   "profile": {
     "title": "Profile",

@@ -1,68 +1,94 @@
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { api } from '../lib/api';
+import type * as NotificationsType from 'expo-notifications';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Detect if running in Expo Go — must be checked before any expo-notifications import
+const isExpoGo = Constants.executionEnvironment === 'storeClient';
+
+// Only set notification handler in real builds
+if (!isExpoGo) {
+  import('expo-notifications').then((Notifications) => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  });
+}
 
 export async function registerForPushNotifications(): Promise<string | null> {
-  if (!Device.isDevice) {
-    console.log('Push notifications require a physical device');
-    return null;
-  }
+  if (isExpoGo) return null;
 
-  // Check existing permissions
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+  const [Notifications, Device, { api }] = await Promise.all([
+    import('expo-notifications'),
+    import('expo-device'),
+    import('../lib/api'),
+  ]);
 
-  // Request permission if not granted
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
+  if (!Device.isDevice) return null;
 
-  if (finalStatus !== 'granted') {
-    return null;
-  }
-
-  // Android channel
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('orders', {
-      name: 'Order Updates',
-      importance: Notifications.AndroidImportance.HIGH,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#E07A2F',
-    });
-  }
-
-  // Get token
-  const tokenData = await Notifications.getExpoPushTokenAsync({
-    projectId: undefined, // Uses app.json expo.extra.eas.projectId
-  });
-
-  const token = tokenData.data;
-
-  // Register token with backend
   try {
-    await api.post('/api/notifications/register', { token });
-  } catch {
-    // Token registration failure is non-critical
-    console.log('Failed to register push token with backend');
-  }
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-  return token;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') return null;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('orders', {
+        name: 'Order Updates',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#E07A2F',
+      });
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId: undefined,
+    });
+
+    const token = tokenData.data;
+
+    try {
+      await api.post('/api/notifications/register', { token });
+    } catch {
+      // non-critical
+    }
+
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+export async function getNotificationPermissionStatus(): Promise<boolean> {
+  if (isExpoGo) return false;
+  try {
+    const Notifications = await import('expo-notifications');
+    const { status } = await Notifications.getPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
 }
 
 export function addNotificationResponseListener(
-  handler: (response: Notifications.NotificationResponse) => void,
-) {
-  return Notifications.addNotificationResponseReceivedListener(handler);
+  handler: (response: NotificationsType.NotificationResponse) => void,
+): NotificationsType.Subscription {
+  if (isExpoGo) {
+    return { remove: () => {} } as NotificationsType.Subscription;
+  }
+  // Dynamic import — fire and return a cancellable ref
+  let sub: NotificationsType.Subscription | null = null;
+  import('expo-notifications').then((Notifications) => {
+    sub = Notifications.addNotificationResponseReceivedListener(handler);
+  });
+  return { remove: () => sub?.remove() } as NotificationsType.Subscription;
 }

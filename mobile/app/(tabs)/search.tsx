@@ -159,6 +159,13 @@ export default function SearchScreen() {
         })}
       </View>
 
+      {/* Result count */}
+      {query.trim().length > 0 && (
+        <Text style={{ paddingHorizontal: 20, marginBottom: 8, fontFamily: FONT_FAMILIES.body, fontSize: 13, color: COLORS.textSecondary }}>
+          {filteredAndSorted.length} restaurant{filteredAndSorted.length !== 1 ? 's' : ''} trouvé{filteredAndSorted.length !== 1 ? 's' : ''}
+        </Text>
+      )}
+
       {/* Results */}
       <FlatList
         data={filteredAndSorted}

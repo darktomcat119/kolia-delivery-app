@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell.exe -Command \"Get-NetTCPConnection -LocalPort 8081 -ErrorAction SilentlyContinue | ForEach-Object { $_.Close\\(\\) }\")",
+      "Bash(powershell.exe -Command \"netsh int ipv6 reset\")",
+      "Bash(powershell.exe -Command \"Get-Process -Name ''node'' | Where-Object { $_.Id -eq 28316 } | Select-Object Id,Name,@{N=''Cmd'';E={$_.MainWindowTitle}}\")",
+      "Bash(cmd /c \"for /f \"\"tokens=5\"\" %a in \\(''netstat -ano ^| findstr :8081 ^| findstr LISTENING''\\) do taskkill /PID %a /F\")",
+      "Bash(EXPO_NO_DEFAULT_PORT=1 npx expo start --port 8081 --clear)",
+      "Bash(npx expo start --port 8083)",
+      "Bash(adb devices)",
+      "Bash(emulator -list-avds)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/emulator/emulator\" -list-avds)",
+      "Bash(adb shell dumpsys activity activities)",
+      "Bash(adb reverse tcp:8083 tcp:8083)",
+      "Bash(adb shell input keyevent 82)",
+      "Bash(adb shell input tap 540 400)",
+      "Bash(adb shell am force-stop com.kolia.app)",
+      "Bash(adb shell am start -n com.kolia.app/.MainActivity)",
+      "Bash(adb reverse tcp:8081 tcp:8081)",
+      "Bash(npx expo start --port 8082)",
+      "Bash(npx expo start --port 8085)",
+      "Bash(adb reverse tcp:8085 tcp:8085)",
+      "Bash(netstat -ano)",
+      "Read(//d/Workspace/working now/kolia-delivery-app/**)",
+      "Bash(kill -9 148596)",
+      "Bash(npx expo start --port 8081)",
+      "Bash(~/AppData/Local/Android/Sdk/emulator/emulator -list-avds)",
+      "Read(//c/Users/Administrator/AppData/Local/Android/Sdk/emulator/**)",
+      "Bash(adb shell getprop sys.boot_completed)",
+      "Bash(adb install \"d:/Workspace/working now/kolia-delivery-app/mobile/android/app/build/outputs/apk/debug/app-debug.apk\")",
+      "Bash(npx expo run:android --port 8081)"
+    ]
+  }
+}

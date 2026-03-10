@@ -3,8 +3,21 @@ import { supabase } from './supabase';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
+  // getSession() may return an expired token from local storage.
+  // Check expiry and refresh if needed.
   const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+  let token = data.session?.access_token;
+
+  if (data.session?.expires_at) {
+    const expiresAt = data.session.expires_at * 1000; // convert to ms
+    const now = Date.now();
+    // Refresh if token expires within 60 seconds
+    if (expiresAt - now < 60_000) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      token = refreshed.session?.access_token ?? token;
+    }
+  }
+
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

@@ -168,6 +168,7 @@ CREATE TABLE public.notifications (
 -- INDEXES
 -- ============================================
 
+CREATE INDEX idx_profiles_role ON public.profiles(role);
 CREATE INDEX idx_restaurants_owner ON public.restaurants(owner_id);
 CREATE INDEX idx_restaurants_city ON public.restaurants(city);
 CREATE INDEX idx_restaurants_cuisine ON public.restaurants(cuisine_type);
@@ -182,6 +183,19 @@ CREATE INDEX idx_orders_status ON public.orders(status);
 CREATE INDEX idx_orders_number ON public.orders(order_number);
 CREATE INDEX idx_order_items_order ON public.order_items(order_id);
 CREATE INDEX idx_notifications_user ON public.notifications(user_id);
+CREATE INDEX idx_notifications_read ON public.notifications(user_id, is_read);
+
+-- ============================================
+-- HELPER FUNCTION: check if current user is admin
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- ============================================
 -- ROW LEVEL SECURITY
@@ -195,44 +209,132 @@ ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
--- Profiles
-CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+-- ============================================
+-- PROFILES policies
+-- ============================================
+CREATE POLICY "Users can view own profile" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Admins can view all profiles" ON public.profiles
+  FOR SELECT USING (public.is_admin());
 
--- Restaurants (public read + owner management)
-CREATE POLICY "Anyone can view active restaurants" ON public.restaurants FOR SELECT USING (is_active = true);
-CREATE POLICY "Owners can view own restaurants" ON public.restaurants FOR SELECT USING (auth.uid() = owner_id);
-CREATE POLICY "Owners can update own restaurants" ON public.restaurants FOR UPDATE USING (auth.uid() = owner_id);
-CREATE POLICY "Owners can insert restaurants" ON public.restaurants FOR INSERT WITH CHECK (auth.uid() = owner_id);
+-- ============================================
+-- RESTAURANTS policies
+-- ============================================
+CREATE POLICY "Anyone can view active restaurants" ON public.restaurants
+  FOR SELECT USING (is_active = true);
+CREATE POLICY "Owners can view own restaurants" ON public.restaurants
+  FOR SELECT USING (auth.uid() = owner_id);
+CREATE POLICY "Owners can update own restaurants" ON public.restaurants
+  FOR UPDATE USING (auth.uid() = owner_id);
+CREATE POLICY "Owners can insert restaurants" ON public.restaurants
+  FOR INSERT WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "Admins can do anything with restaurants" ON public.restaurants
+  FOR ALL USING (public.is_admin());
 
--- Menu Categories (public read + owner management)
-CREATE POLICY "Anyone can view menu categories" ON public.menu_categories FOR SELECT USING (is_active = true);
-CREATE POLICY "Owners can manage categories" ON public.menu_categories FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = menu_categories.restaurant_id AND restaurants.owner_id = auth.uid()));
+-- ============================================
+-- MENU CATEGORIES policies
+-- ============================================
+CREATE POLICY "Anyone can view active categories" ON public.menu_categories
+  FOR SELECT USING (is_active = true);
+CREATE POLICY "Owners can manage own categories" ON public.menu_categories
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.restaurants
+      WHERE restaurants.id = menu_categories.restaurant_id
+        AND restaurants.owner_id = auth.uid()
+    )
+  );
+CREATE POLICY "Admins can do anything with categories" ON public.menu_categories
+  FOR ALL USING (public.is_admin());
 
--- Menu Items (public read + owner management)
-CREATE POLICY "Anyone can view menu items" ON public.menu_items FOR SELECT USING (true);
-CREATE POLICY "Owners can manage items" ON public.menu_items FOR ALL
-  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = menu_items.restaurant_id AND restaurants.owner_id = auth.uid()));
+-- ============================================
+-- MENU ITEMS policies
+-- ============================================
+CREATE POLICY "Anyone can view menu items" ON public.menu_items
+  FOR SELECT USING (true);
+CREATE POLICY "Owners can manage own items" ON public.menu_items
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.restaurants
+      WHERE restaurants.id = menu_items.restaurant_id
+        AND restaurants.owner_id = auth.uid()
+    )
+  );
+CREATE POLICY "Admins can do anything with items" ON public.menu_items
+  FOR ALL USING (public.is_admin());
 
--- Orders
-CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can create orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Owners can view restaurant orders" ON public.orders FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = orders.restaurant_id AND restaurants.owner_id = auth.uid()));
-CREATE POLICY "Owners can update restaurant orders" ON public.orders FOR UPDATE
-  USING (EXISTS (SELECT 1 FROM public.restaurants WHERE restaurants.id = orders.restaurant_id AND restaurants.owner_id = auth.uid()));
+-- ============================================
+-- ORDERS policies
+-- ============================================
+CREATE POLICY "Users can view own orders" ON public.orders
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can create orders" ON public.orders
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own received orders" ON public.orders
+  FOR UPDATE USING (auth.uid() = user_id AND status = 'received');
+CREATE POLICY "Owners can view restaurant orders" ON public.orders
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.restaurants
+      WHERE restaurants.id = orders.restaurant_id
+        AND restaurants.owner_id = auth.uid()
+    )
+  );
+CREATE POLICY "Owners can update restaurant orders" ON public.orders
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.restaurants
+      WHERE restaurants.id = orders.restaurant_id
+        AND restaurants.owner_id = auth.uid()
+    )
+  );
+CREATE POLICY "Admins can do anything with orders" ON public.orders
+  FOR ALL USING (public.is_admin());
 
--- Order Items
-CREATE POLICY "Users can view own order items" ON public.order_items FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid()));
-CREATE POLICY "Users can insert order items" ON public.order_items FOR INSERT
-  WITH CHECK (EXISTS (SELECT 1 FROM public.orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid()));
+-- ============================================
+-- ORDER ITEMS policies
+-- ============================================
+CREATE POLICY "Users can view own order items" ON public.order_items
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.orders
+      WHERE orders.id = order_items.order_id
+        AND orders.user_id = auth.uid()
+    )
+  );
+CREATE POLICY "Users can insert order items" ON public.order_items
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.orders
+      WHERE orders.id = order_items.order_id
+        AND orders.user_id = auth.uid()
+    )
+  );
+CREATE POLICY "Owners can view restaurant order items" ON public.order_items
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.orders
+      JOIN public.restaurants ON restaurants.id = orders.restaurant_id
+      WHERE orders.id = order_items.order_id
+        AND restaurants.owner_id = auth.uid()
+    )
+  );
+CREATE POLICY "Admins can do anything with order items" ON public.order_items
+  FOR ALL USING (public.is_admin());
 
--- Notifications
-CREATE POLICY "Users can view own notifications" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can update own notifications" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+-- ============================================
+-- NOTIFICATIONS policies
+-- ============================================
+CREATE POLICY "Users can view own notifications" ON public.notifications
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications" ON public.notifications
+  FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Admins can do anything with notifications" ON public.notifications
+  FOR ALL USING (public.is_admin());
 
 -- ============================================
 -- FUNCTIONS & TRIGGERS
@@ -252,15 +354,31 @@ CREATE TRIGGER tr_restaurants_updated_at BEFORE UPDATE ON public.restaurants FOR
 CREATE TRIGGER tr_menu_items_updated_at BEFORE UPDATE ON public.menu_items FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER tr_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
--- Auto-create profile on user signup
+-- Auto-create profile on user signup (includes role from metadata if provided)
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  new_role public.user_role := 'customer';
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  BEGIN
+    IF NEW.raw_user_meta_data->>'role' IS NOT NULL
+       AND NEW.raw_user_meta_data->>'role' != '' THEN
+      new_role := (NEW.raw_user_meta_data->>'role')::public.user_role;
+    END IF;
+  EXCEPTION WHEN invalid_text_representation THEN
+    new_role := 'customer';
+  END;
+
+  INSERT INTO public.profiles (id, email, full_name, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.raw_user_meta_data->>'full_name',
+    new_role
+  );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
@@ -280,3 +398,9 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER tr_order_number BEFORE INSERT ON public.orders FOR EACH ROW EXECUTE FUNCTION generate_order_number();
+
+-- ============================================
+-- ENABLE REALTIME for order tracking
+-- NOTE: Enable realtime via Supabase Dashboard instead:
+-- Database > Replication > supabase_realtime > Add tables: orders, notifications
+-- ============================================

@@ -54,15 +54,27 @@ export default function OrdersScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }} edges={['top']}>
       {/* Header */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 }}>
         <Text
           style={{
             fontFamily: FONT_FAMILIES.display,
-            fontSize: 24,
+            fontSize: 28,
             color: COLORS.textPrimary,
+            marginBottom: 4,
           }}
         >
           {t('orders.title')}
+        </Text>
+        <Text
+          style={{
+            fontFamily: FONT_FAMILIES.body,
+            fontSize: 14,
+            color: COLORS.textSecondary,
+          }}
+        >
+          {orders.length > 0
+            ? `${orders.length} ${t('orders.totalOrders')}`
+            : ''}
         </Text>
       </View>
 
@@ -79,11 +91,14 @@ export default function OrdersScreen() {
               onPress={() => router.push(`/order/${item.id}/tracking`)}
               style={({ pressed }) => ({
                 marginHorizontal: 20,
-                marginBottom: 12,
+                marginBottom: 14,
                 backgroundColor: COLORS.surface,
-                borderRadius: BORDER_RADIUS.card,
+                borderRadius: 18,
                 padding: 16,
                 opacity: pressed ? 0.95 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+                borderWidth: 1,
+                borderColor: COLORS.borderLight,
                 ...SHADOWS.card,
               })}
             >

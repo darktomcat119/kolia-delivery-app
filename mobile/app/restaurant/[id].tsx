@@ -50,6 +50,7 @@ export default function RestaurantDetailScreen() {
 
   const [restaurant, setRestaurant] = useState<RestaurantWithMenu | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const categoryTabsRef = useRef<ScrollView>(null);
 
@@ -60,38 +61,55 @@ export default function RestaurantDetailScreen() {
   const fetchRestaurant = async () => {
     if (!id) return;
     setLoading(true);
+    setFetchError(null);
 
-    const { data, error } = await supabase
-      .from('restaurants')
-      .select(`
-        *,
-        menu_categories (
+    try {
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 10000),
+      );
+
+      const query = supabase
+        .from('restaurants')
+        .select(`
           *,
-          menu_items (*)
-        )
-      `)
-      .eq('id', id)
-      .single();
+          menu_categories (
+            *,
+            menu_items (*)
+          )
+        `)
+        .eq('id', id)
+        .single();
 
-    if (!error && data) {
-      // Sort categories and items
-      const sorted = {
-        ...data,
-        menu_categories: (data.menu_categories ?? [])
-          .filter((c: MenuCategory) => c.is_active)
-          .sort((a: MenuCategory, b: MenuCategory) => a.sort_order - b.sort_order)
-          .map((cat: MenuCategory & { menu_items: MenuItem[] }) => ({
-            ...cat,
-            menu_items: (cat.menu_items ?? []).sort(
-              (a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order,
-            ),
-          })),
-      } as RestaurantWithMenu;
+      const { data, error } = await Promise.race([query, timeout]) as any;
 
-      setRestaurant(sorted);
-      if (sorted.menu_categories.length > 0) {
-        setActiveCategory(sorted.menu_categories[0].id);
+      if (error) {
+        setFetchError(error.message || 'Failed to load restaurant');
+        setLoading(false);
+        return;
       }
+
+      if (data) {
+        // Sort categories and items
+        const sorted = {
+          ...data,
+          menu_categories: (data.menu_categories ?? [])
+            .filter((c: MenuCategory) => c.is_active)
+            .sort((a: MenuCategory, b: MenuCategory) => a.sort_order - b.sort_order)
+            .map((cat: MenuCategory & { menu_items: MenuItem[] }) => ({
+              ...cat,
+              menu_items: (cat.menu_items ?? []).sort(
+                (a: MenuItem, b: MenuItem) => a.sort_order - b.sort_order,
+              ),
+            })),
+        } as RestaurantWithMenu;
+
+        setRestaurant(sorted);
+        if (sorted.menu_categories.length > 0) {
+          setActiveCategory(sorted.menu_categories[0].id);
+        }
+      }
+    } catch (err: any) {
+      setFetchError(err?.message || 'Network error. Check your connection.');
     }
 
     setLoading(false);
@@ -123,7 +141,7 @@ export default function RestaurantDetailScreen() {
       if (!added) {
         Alert.alert(
           t('cart.differentRestaurant'),
-          '',
+          t('cart.differentRestaurantMessage'),
           [
             { text: t('common.cancel'), style: 'cancel' },
             {
@@ -159,12 +177,33 @@ export default function RestaurantDetailScreen() {
     );
   }
 
-  if (!restaurant) {
+  if (fetchError || !restaurant) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FONT_FAMILIES.body, color: COLORS.textSecondary }}>
-          Restaurant not found
+      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+        <Text style={{ fontFamily: FONT_FAMILIES.bodySemibold, fontSize: 16, color: COLORS.textPrimary, marginBottom: 8, textAlign: 'center' }}>
+          {fetchError ? t('common.error') : 'Restaurant not found'}
         </Text>
+        {fetchError && (
+          <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 14, color: COLORS.textSecondary, marginBottom: 20, textAlign: 'center' }}>
+            {fetchError}
+          </Text>
+        )}
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <Pressable
+            onPress={() => router.back()}
+            style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: COLORS.border }}
+          >
+            <Text style={{ fontFamily: FONT_FAMILIES.bodySemibold, color: COLORS.textPrimary }}>{t('common.back')}</Text>
+          </Pressable>
+          {fetchError && (
+            <Pressable
+              onPress={fetchRestaurant}
+              style={{ paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: COLORS.primary }}
+            >
+              <Text style={{ fontFamily: FONT_FAMILIES.bodySemibold, color: '#FFFFFF' }}>{t('common.retry')}</Text>
+            </Pressable>
+          )}
+        </View>
       </SafeAreaView>
     );
   }
@@ -387,7 +426,6 @@ export default function RestaurantDetailScreen() {
                     key={item.id}
                     item={item}
                     onAdd={() => handleAddToCart(item)}
-                    isOpen={isOpen}
                     cartQuantity={
                       isCartForThisRestaurant
                         ? cartStore.items.find((ci) => ci.menu_item_id === item.id)?.quantity ?? 0
@@ -505,19 +543,17 @@ function InfoChip({ icon, text }: { icon?: React.ReactNode; text: string }) {
 function MenuItemCard({
   item,
   onAdd,
-  isOpen,
   cartQuantity,
   onUpdateQuantity,
   t,
 }: {
   item: MenuItem;
   onAdd: () => void;
-  isOpen: boolean;
   cartQuantity: number;
   onUpdateQuantity: (qty: number) => void;
   t: (key: string) => string;
 }) {
-  const isAvailable = item.is_available && isOpen;
+  const isAvailable = item.is_available;
 
   return (
     <View
