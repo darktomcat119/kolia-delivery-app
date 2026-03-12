@@ -22,8 +22,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
 
   initialize: async () => {
+    const INIT_TIMEOUT_MS = 8000;
+
+    const withTimeout = <T>(p: Promise<T>): Promise<T> => {
+      return new Promise((resolve, reject) => {
+        const t = setTimeout(() => reject(new Error('Auth init timeout')), INIT_TIMEOUT_MS);
+        p.then((v) => {
+          clearTimeout(t);
+          resolve(v);
+        }).catch((e) => {
+          clearTimeout(t);
+          reject(e);
+        });
+      });
+    };
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await withTimeout(supabase.auth.getSession());
 
       if (session) {
         const { data: profile } = await supabase

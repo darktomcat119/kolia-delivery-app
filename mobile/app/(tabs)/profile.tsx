@@ -5,10 +5,10 @@ import {
   Pressable,
   Alert,
   ScrollView,
-  TextInput,
   ActivityIndicator,
   Switch,
   Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -19,23 +19,21 @@ import {
   LogOut,
   ChevronRight,
   X,
-  Navigation,
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
-import { useLocationStore } from '../../src/stores/locationStore';
-import { getCurrentLocation } from '../../src/services/location';
 import { registerForPushNotifications, getNotificationPermissionStatus } from '../../src/services/notifications';
 import { supabase } from '../../src/lib/supabase';
 import { LanguageSelector } from '../../src/components/common/LanguageSelector';
+import { DeliveryAddressModal } from '../../src/components/address/DeliveryAddressModal';
+import { LuxuryBackground } from '../../src/components/ui/LuxuryBackground';
 import {
   COLORS,
   FONT_FAMILIES,
   FONT_SIZES,
   BORDER_RADIUS,
   SPACING,
-  SHADOWS,
 } from '../../src/config/constants';
 
 interface SettingsRowProps {
@@ -45,6 +43,7 @@ interface SettingsRowProps {
   onPress: () => void;
   isDestructive?: boolean;
   rightElement?: React.ReactNode;
+  isLast?: boolean;
 }
 
 function SettingsRow({
@@ -54,232 +53,63 @@ function SettingsRow({
   onPress,
   isDestructive,
   rightElement,
+  isLast,
 }: SettingsRowProps) {
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
         flexDirection: 'row',
+        flexWrap: 'nowrap',
         alignItems: 'center',
-        paddingVertical: 14,
+        paddingVertical: 12,
         paddingHorizontal: 16,
         backgroundColor: pressed ? COLORS.surfaceHover : 'transparent',
         borderRadius: 12,
+        borderBottomWidth: isLast === true ? 0 : 1,
+        borderBottomColor: COLORS.borderLight,
       })}
     >
-      <View style={{ marginRight: 12 }}>{icon}</View>
-      <Text
-        style={{
-          flex: 1,
-          fontFamily: FONT_FAMILIES.body,
-          fontSize: 16,
-          color: isDestructive ? COLORS.error : COLORS.textPrimary,
-        }}
-      >
-        {label}
-      </Text>
-      {value && (
-        <Text
-          style={{
-            fontFamily: FONT_FAMILIES.body,
-            fontSize: 14,
-            color: COLORS.textTertiary,
-            marginRight: 8,
-          }}
-        >
-          {value}
-        </Text>
-      )}
-      {rightElement ?? <ChevronRight size={20} color={COLORS.textTertiary} />}
-    </Pressable>
-  );
-}
-
-// ─── Address Modal ──────────────────────────────────────────
-function AddressModal({
-  visible,
-  onClose,
-}: {
-  visible: boolean;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const user = useAuthStore((s) => s.user);
-  const updateProfile = useAuthStore((s) => s.updateProfile);
-  const locationAddress = useLocationStore((s) => s.address);
-  const locationLat = useLocationStore((s) => s.latitude);
-  const locationLng = useLocationStore((s) => s.longitude);
-  const locationLoading = useLocationStore((s) => s.isLoading);
-
-  const [address, setAddress] = useState(user?.address ?? '');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (visible) {
-      setAddress(user?.address ?? '');
-    }
-  }, [visible, user?.address]);
-
-  // When location service provides a new address, use it
-  useEffect(() => {
-    if (locationAddress && locationLat && locationLng) {
-      setAddress(locationAddress);
-    }
-  }, [locationAddress, locationLat, locationLng]);
-
-  const handleUseLocation = () => {
-    getCurrentLocation();
-  };
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const data: Record<string, unknown> = { address };
-      if (locationLat && locationLng && address === locationAddress) {
-        data.latitude = locationLat;
-        data.longitude = locationLng;
-      }
-      await updateProfile(data as Parameters<typeof updateProfile>[0]);
-      Alert.alert(t('profile.addressSaved'));
-      onClose();
-    } catch {
-      Alert.alert(t('common.error'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent>
+      <View style={{ marginRight: 12, flexShrink: 0 }}>{icon}</View>
       <View
         style={{
           flex: 1,
-          backgroundColor: COLORS.overlay,
-          justifyContent: 'flex-end',
+          minWidth: 0,
+          flexDirection: 'row',
+          flexWrap: 'nowrap',
+          alignItems: 'center',
+          gap: 6,
         }}
       >
-        <View
+        <Text
+          numberOfLines={1}
           style={{
-            backgroundColor: COLORS.surface,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            padding: SPACING.lg,
-            paddingBottom: 40,
+            flexShrink: 1,
+            fontFamily: FONT_FAMILIES.body,
+            fontSize: 16,
+            color: isDestructive ? COLORS.error : COLORS.textPrimary,
           }}
         >
-          {/* Header */}
-          <View
+          {label}
+        </Text>
+        {value ? (
+          <Text
+            numberOfLines={1}
             style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: SPACING.lg,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: FONT_FAMILIES.bodySemibold,
-                fontSize: FONT_SIZES['2xl'],
-                color: COLORS.textPrimary,
-              }}
-            >
-              {t('profile.deliveryAddress')}
-            </Text>
-            <Pressable onPress={onClose}>
-              <X size={24} color={COLORS.textSecondary} />
-            </Pressable>
-          </View>
-
-          {/* Address input */}
-          <TextInput
-            value={address}
-            onChangeText={setAddress}
-            placeholder={t('profile.addressPlaceholder')}
-            placeholderTextColor={COLORS.textTertiary}
-            multiline
-            style={{
+              flexShrink: 1,
               fontFamily: FONT_FAMILIES.body,
-              fontSize: 16,
-              color: COLORS.textPrimary,
-              backgroundColor: COLORS.background,
-              borderRadius: BORDER_RADIUS.input,
-              padding: SPACING.base,
-              minHeight: 80,
-              textAlignVertical: 'top',
-              borderWidth: 1,
-              borderColor: COLORS.border,
-            }}
-          />
-
-          {/* Use current location */}
-          <Pressable
-            onPress={handleUseLocation}
-            disabled={locationLoading}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop: SPACING.md,
-              paddingVertical: SPACING.sm,
+              fontSize: 14,
+              color: COLORS.textTertiary,
             }}
           >
-            {locationLoading ? (
-              <ActivityIndicator
-                size="small"
-                color={COLORS.primary}
-                style={{ marginRight: 8 }}
-              />
-            ) : (
-              <Navigation
-                size={18}
-                color={COLORS.primary}
-                style={{ marginRight: 8 }}
-              />
-            )}
-            <Text
-              style={{
-                fontFamily: FONT_FAMILIES.bodyMedium,
-                fontSize: 14,
-                color: COLORS.primary,
-              }}
-            >
-              {locationLoading
-                ? t('profile.locatingAddress')
-                : t('profile.useCurrentLocation')}
-            </Text>
-          </Pressable>
-
-          {/* Save button */}
-          <Pressable
-            onPress={handleSave}
-            disabled={saving || !address.trim()}
-            style={{
-              backgroundColor:
-                saving || !address.trim()
-                  ? COLORS.textTertiary
-                  : COLORS.primary,
-              borderRadius: BORDER_RADIUS.button,
-              paddingVertical: 14,
-              alignItems: 'center',
-              marginTop: SPACING.lg,
-            }}
-          >
-            {saving ? (
-              <ActivityIndicator color={COLORS.textOnPrimary} />
-            ) : (
-              <Text
-                style={{
-                  fontFamily: FONT_FAMILIES.bodySemibold,
-                  fontSize: 16,
-                  color: COLORS.textOnPrimary,
-                }}
-              >
-                {t('profile.saveChanges')}
-              </Text>
-            )}
-          </Pressable>
-        </View>
+            {value}
+          </Text>
+        ) : null}
       </View>
-    </Modal>
+      <View style={{ marginLeft: 8, flexShrink: 0 }}>
+        {rightElement ?? <ChevronRight size={20} color={COLORS.textTertiary} />}
+      </View>
+    </Pressable>
   );
 }
 
@@ -393,7 +223,7 @@ function PasswordModal({
               fontFamily: FONT_FAMILIES.body,
               fontSize: 16,
               color: COLORS.textPrimary,
-              backgroundColor: COLORS.background,
+              backgroundColor: COLORS.surface,
               borderRadius: BORDER_RADIUS.input,
               padding: SPACING.base,
               borderWidth: 1,
@@ -422,7 +252,7 @@ function PasswordModal({
               fontFamily: FONT_FAMILIES.body,
               fontSize: 16,
               color: COLORS.textPrimary,
-              backgroundColor: COLORS.background,
+              backgroundColor: COLORS.surface,
               borderRadius: BORDER_RADIUS.input,
               padding: SPACING.base,
               borderWidth: 1,
@@ -551,12 +381,14 @@ export default function ProfileScreen() {
   const currentLanguage = languageLabels[i18n.language] ?? i18n.language;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        {/* User info with gradient header */}
-        <View
-          style={{
-            backgroundColor: COLORS.secondary,
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../assets/onboarding/african-cuisine.jpg')} textureOpacity={0.04} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+          {/* User info header */}
+          <View
+            style={{
+              backgroundColor: COLORS.secondary,
             paddingTop: 48,
             paddingBottom: 32,
             paddingHorizontal: 20,
@@ -626,10 +458,16 @@ export default function ProfileScreen() {
         <View
           style={{
             backgroundColor: COLORS.surface,
-            borderRadius: 20,
+            borderRadius: 24,
             padding: 8,
             marginHorizontal: 20,
-            ...SHADOWS.card,
+            borderWidth: 1,
+            borderColor: 'rgba(0,0,0,0.05)',
+            shadowColor: '#1A1A1A',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.06,
+            shadowRadius: 12,
+            elevation: 4,
           }}
         >
           <SettingsRow
@@ -637,8 +475,8 @@ export default function ProfileScreen() {
             label={t('profile.deliveryAddress')}
             value={
               user?.address
-                ? user.address.length > 20
-                  ? user.address.slice(0, 20) + '...'
+                ? user.address.length > 24
+                  ? user.address.slice(0, 24) + '…'
                   : user.address
                 : undefined
             }
@@ -694,6 +532,7 @@ export default function ProfileScreen() {
             label={t('profile.logout')}
             onPress={handleLogout}
             isDestructive
+            isLast
           />
         </View>
 
@@ -712,7 +551,7 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Modals */}
-      <AddressModal
+      <DeliveryAddressModal
         visible={showAddressModal}
         onClose={() => setShowAddressModal(false)}
       />
@@ -720,6 +559,7 @@ export default function ProfileScreen() {
         visible={showPasswordModal}
         onClose={() => setShowPasswordModal(false)}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

@@ -22,9 +22,9 @@ import {
   COLORS,
   FONT_FAMILIES,
   FONT_SIZES,
-  SHADOWS,
   BORDER_RADIUS,
 } from '../../src/config/constants';
+import { LuxuryBackground } from '../../src/components/ui/LuxuryBackground';
 import { formatPrice, formatDeliveryTime, formatDistance } from '../../src/utils/formatters';
 import { isRestaurantOpen } from '../../src/utils/openingHours';
 import { haversineDistance } from '../../src/utils/haversine';
@@ -171,17 +171,22 @@ export default function RestaurantDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../../assets/onboarding/restaurant-interior.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   if (fetchError || !restaurant) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../../assets/onboarding/restaurant-interior.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
         <Text style={{ fontFamily: FONT_FAMILIES.bodySemibold, fontSize: 16, color: COLORS.textPrimary, marginBottom: 8, textAlign: 'center' }}>
-          {fetchError ? t('common.error') : 'Restaurant not found'}
+          {fetchError ? t('common.error') : t('restaurant.notFound')}
         </Text>
         {fetchError && (
           <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 14, color: COLORS.textSecondary, marginBottom: 20, textAlign: 'center' }}>
@@ -204,7 +209,8 @@ export default function RestaurantDetailScreen() {
             </Pressable>
           )}
         </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -213,8 +219,9 @@ export default function RestaurantDetailScreen() {
   const isCartForThisRestaurant = cartStore.restaurantId === restaurant.id;
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../assets/onboarding/restaurant-interior.jpg')} textureOpacity={0.04} />
+      <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
         {/* Hero Image */}
         <View style={{ height: 260, backgroundColor: COLORS.skeleton }}>
           {restaurant.image_url ? (
@@ -243,6 +250,8 @@ export default function RestaurantDetailScreen() {
           >
             <Pressable
               onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
               style={{
                 width: 40,
                 height: 40,
@@ -252,7 +261,11 @@ export default function RestaurantDetailScreen() {
                 justifyContent: 'center',
                 marginLeft: 16,
                 marginTop: 8,
-                ...SHADOWS.card,
+                shadowColor: '#1A1A1A',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 8,
+                elevation: 3,
               }}
             >
               <ArrowLeft size={22} color={COLORS.textPrimary} />
@@ -264,10 +277,17 @@ export default function RestaurantDetailScreen() {
         <View
           style={{
             backgroundColor: COLORS.surface,
-            padding: 20,
-            marginTop: -20,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
+            padding: 22,
+            marginTop: -24,
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            borderWidth: 1,
+            borderColor: 'rgba(0,0,0,0.05)',
+            shadowColor: '#1A1A1A',
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 20,
+            elevation: 8,
           }}
         >
           {/* Name + Rating */}
@@ -453,11 +473,17 @@ export default function RestaurantDetailScreen() {
             backgroundColor: COLORS.surface,
             borderTopWidth: 1,
             borderTopColor: COLORS.borderLight,
-            ...SHADOWS.elevated,
+            shadowColor: '#1A1A1A',
+            shadowOffset: { width: 0, height: -6 },
+            shadowOpacity: 0.1,
+            shadowRadius: 20,
+            elevation: 12,
           }}
         >
           <Pressable
             onPress={() => router.push('/cart')}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('restaurant.viewCart')} ${formatPrice(cartTotal)}`}
             style={{
               backgroundColor: COLORS.primary,
               borderRadius: BORDER_RADIUS.button,
@@ -560,11 +586,17 @@ function MenuItemCard({
       style={{
         flexDirection: 'row',
         backgroundColor: COLORS.surface,
-        borderRadius: BORDER_RADIUS.card,
-        marginBottom: 12,
+        borderRadius: 20,
+        marginBottom: 14,
         overflow: 'hidden',
         opacity: isAvailable ? 1 : 0.5,
-        ...SHADOWS.card,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
+        shadowColor: '#1A1A1A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 10,
+        elevation: 3,
       }}
     >
       {/* Content */}

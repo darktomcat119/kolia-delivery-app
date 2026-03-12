@@ -204,6 +204,56 @@ admin.delete('/restaurants/:id', async (c) => {
 });
 
 // ============================================
+// UPLOAD RESTAURANT IMAGES
+// ============================================
+
+const UPLOAD_BUCKET = 'kolia-images';
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+// POST /api/admin/upload/restaurant-image — Upload cover or logo; returns public URL
+admin.post('/upload/restaurant-image', async (c) => {
+  try {
+    const body = await c.req.parseBody();
+    const file = body['file'];
+    const type = (body['type'] as string) || 'cover'; // 'cover' | 'logo'
+
+    if (!file || typeof file === 'string') {
+      return c.json({ error: 'Missing file', code: 'VALIDATION_ERROR' }, 400);
+    }
+
+    const f = file as File;
+    if (f.size > MAX_FILE_SIZE) {
+      return c.json({ error: 'File too large (max 5 MB)', code: 'VALIDATION_ERROR' }, 400);
+    }
+    if (!ALLOWED_TYPES.includes(f.type)) {
+      return c.json({ error: 'Invalid type (use JPEG, PNG or WebP)', code: 'VALIDATION_ERROR' }, 400);
+    }
+
+    const ext = f.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const safeExt = ['jpg', 'jpeg', 'png', 'webp'].includes(ext) ? ext : 'jpg';
+    const timestamp = Date.now();
+    const path = `restaurant/${type}-${timestamp}-${Math.random().toString(36).slice(2, 10)}.${safeExt}`;
+
+    const arrayBuffer = await f.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error } = await supabaseAdmin.storage
+      .from(UPLOAD_BUCKET)
+      .upload(path, buffer, { contentType: f.type, upsert: false });
+
+    if (error) {
+      return c.json({ error: error.message || 'Upload failed', code: 'UPLOAD_ERROR' }, 500);
+    }
+
+    const { data: urlData } = supabaseAdmin.storage.from(UPLOAD_BUCKET).getPublicUrl(path);
+    return c.json({ data: { url: urlData.publicUrl } });
+  } catch (e) {
+    return c.json({ error: e instanceof Error ? e.message : 'Upload failed', code: 'UPLOAD_ERROR' }, 500);
+  }
+});
+
+// ============================================
 // CATEGORIES
 // ============================================
 

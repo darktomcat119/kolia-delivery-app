@@ -19,6 +19,8 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { Input } from '../../src/components/ui/Input';
 import { Button } from '../../src/components/ui/Button';
 import { signupSchema, type SignupFormData } from '../../src/utils/validation';
+import { LuxuryBackground } from '../../src/components/ui/LuxuryBackground';
+import { FlowingShapes } from '../../src/components/ui/FlowingShapes';
 import { COLORS, FONT_FAMILIES, FONT_SIZES } from '../../src/config/constants';
 
 const { width } = Dimensions.get('window');
@@ -42,20 +44,27 @@ export default function SignupScreen() {
     },
   });
 
+  const isNetworkError = (err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    return /network request failed|fetch failed|failed to fetch|auth init timeout/i.test(msg);
+  };
+
   const onSubmit = async (data: SignupFormData) => {
     setLoading(true);
     try {
       await signUp(data.email, data.password, data.fullName);
       router.replace('/(tabs)/home');
-    } catch {
-      Alert.alert(t('common.error'), t('auth.errors.signupFailed'));
+    } catch (err) {
+      const message = isNetworkError(err) ? t('auth.errors.networkError') : t('auth.errors.signupFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../assets/onboarding/african-cuisine.jpg')} textureOpacity={0.04} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -75,8 +84,15 @@ export default function SignupScreen() {
               borderBottomLeftRadius: 32,
               borderBottomRightRadius: 32,
               overflow: 'hidden',
+              position: 'relative',
             }}
           >
+            <Image
+              source={require('../../assets/onboarding/african-cuisine.jpg')}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.12 }}
+              resizeMode="cover"
+            />
+            <FlowingShapes />
             {/* Decorative circles */}
             <View
               style={{
@@ -113,6 +129,8 @@ export default function SignupScreen() {
                 justifyContent: 'center',
                 marginBottom: 16,
               }}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
             >
               <ArrowLeft size={20} color="#FFFFFF" />
             </Pressable>

@@ -20,12 +20,24 @@ import { api } from '../src/lib/api';
 import { haversineDistance } from '../src/utils/haversine';
 import { formatPrice } from '../src/utils/formatters';
 import type { CreateOrderPayload, CreateOrderResponse, OrderType } from '../src/types';
+import { LinearGradient } from 'expo-linear-gradient';
+import { LuxuryBackground } from '../src/components/ui/LuxuryBackground';
+import { DeliveryAddressModal } from '../src/components/address/DeliveryAddressModal';
 import {
   COLORS,
   FONT_FAMILIES,
-  SHADOWS,
   BORDER_RADIUS,
 } from '../src/config/constants';
+
+const cardShadow = {
+  borderWidth: 1,
+  borderColor: 'rgba(0,0,0,0.05)' as const,
+  shadowColor: '#1A1A1A',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06,
+  shadowRadius: 10,
+  elevation: 3,
+};
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -40,6 +52,7 @@ export default function CheckoutScreen() {
   const [orderType, setOrderType] = useState<OrderType>('delivery');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   const restaurant = restaurants.find((r) => r.id === restaurantId);
   const subtotal = getSubtotal();
@@ -69,7 +82,7 @@ export default function CheckoutScreen() {
     }
 
     if (belowMinimum) {
-      Alert.alert(`Minimum order: ${formatPrice(restaurant?.minimum_order ?? 0)}`);
+      Alert.alert(t('checkout.minimumOrder', { amount: formatPrice(restaurant?.minimum_order ?? 0) }));
       return;
     }
 
@@ -119,7 +132,9 @@ export default function CheckoutScreen() {
       clearCart();
       router.replace(`/order/${result.order_id}/confirmation`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('checkout.paymentFailed'));
+      const message = err instanceof Error ? err.message : t('checkout.paymentFailed');
+      const code = err && typeof err === 'object' && 'code' in err ? (err as { code?: string }).code : undefined;
+      setError(code === 'SERVICE_UNAVAILABLE' ? t('auth.errors.networkError') : message);
     } finally {
       setLoading(false);
     }
@@ -127,42 +142,45 @@ export default function CheckoutScreen() {
 
   if (!restaurant || items.length === 0) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FONT_FAMILIES.body, color: COLORS.textSecondary }}>
-          {t('cart.empty')}
-        </Text>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../assets/onboarding/african-cuisine.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontFamily: FONT_FAMILIES.body, color: COLORS.textSecondary }}>
+            {t('cart.empty')}
+          </Text>
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: COLORS.borderLight,
-          backgroundColor: COLORS.surface,
-        }}
-      >
-        <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </Pressable>
-        <Text
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../assets/onboarding/african-cuisine.jpg')} textureOpacity={0.04} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient
+          colors={['rgba(224,122,47,0.08)', 'rgba(27,94,58,0.04)', 'transparent']}
           style={{
-            fontFamily: FONT_FAMILIES.bodySemibold,
-            fontSize: 18,
-            color: COLORS.textPrimary,
-            marginLeft: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingVertical: 14,
+            paddingBottom: 18,
           }}
         >
-          {t('checkout.title')}
-        </Text>
-      </View>
+          <Pressable onPress={() => router.back()} style={{ padding: 4 }} accessibilityRole="button" accessibilityLabel={t('common.back')}>
+            <ArrowLeft size={24} color={COLORS.textPrimary} />
+          </Pressable>
+          <Text
+            style={{
+              fontFamily: FONT_FAMILIES.bodySemibold,
+              fontSize: 18,
+              color: COLORS.textPrimary,
+              marginLeft: 12,
+            }}
+          >
+            {t('checkout.title')}
+          </Text>
+        </LinearGradient>
 
       <ScrollView
         style={{ flex: 1 }}
@@ -191,7 +209,7 @@ export default function CheckoutScreen() {
                     borderRadius: BORDER_RADIUS.button - 2,
                     backgroundColor: isActive ? COLORS.surface : 'transparent',
                     alignItems: 'center',
-                    ...(isActive ? SHADOWS.card : {}),
+                    ...(isActive ? cardShadow : {}),
                   }}
                 >
                   <Text
@@ -212,12 +230,13 @@ export default function CheckoutScreen() {
         {/* Delivery address */}
         {orderType === 'delivery' && (
           <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-            <View
+            <Pressable
+              onPress={() => setShowAddressModal(true)}
               style={{
                 backgroundColor: COLORS.surface,
-                borderRadius: BORDER_RADIUS.card,
-                padding: 16,
-                ...SHADOWS.card,
+                borderRadius: 22,
+                padding: 18,
+                ...cardShadow,
               }}
             >
               <Text
@@ -241,7 +260,16 @@ export default function CheckoutScreen() {
                   }}
                   numberOfLines={2}
                 >
-                  {user?.address || 'No address set'}
+                  {user?.address || t('checkout.noAddressSet')}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: FONT_FAMILIES.bodySemibold,
+                    fontSize: 14,
+                    color: COLORS.primary,
+                  }}
+                >
+                  {user?.address ? t('checkout.changeAddress') : t('checkout.setAddress')}
                 </Text>
               </View>
 
@@ -270,7 +298,7 @@ export default function CheckoutScreen() {
                   </Text>
                 </View>
               )}
-            </View>
+            </Pressable>
           </View>
         )}
 
@@ -280,9 +308,9 @@ export default function CheckoutScreen() {
             <View
               style={{
                 backgroundColor: COLORS.surface,
-                borderRadius: BORDER_RADIUS.card,
-                padding: 16,
-                ...SHADOWS.card,
+                borderRadius: 22,
+                padding: 18,
+                ...cardShadow,
               }}
             >
               <Text
@@ -328,9 +356,9 @@ export default function CheckoutScreen() {
           <View
             style={{
               backgroundColor: COLORS.surface,
-              borderRadius: BORDER_RADIUS.card,
-              padding: 16,
-              ...SHADOWS.card,
+              borderRadius: 22,
+              padding: 18,
+              ...cardShadow,
             }}
           >
             {items.map((item) => (
@@ -461,7 +489,11 @@ export default function CheckoutScreen() {
           borderTopColor: COLORS.borderLight,
           padding: 20,
           paddingBottom: 36,
-          ...SHADOWS.elevated,
+          shadowColor: '#1A1A1A',
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.1,
+          shadowRadius: 20,
+          elevation: 12,
         }}
       >
         {/* Disabled reason */}
@@ -472,7 +504,7 @@ export default function CheckoutScreen() {
         )}
         {belowMinimum && (
           <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 12, color: COLORS.warning, textAlign: 'center', marginBottom: 10 }}>
-            ⚠️ Minimum de commande : {formatPrice(restaurant?.minimum_order ?? 0)}
+            ⚠️ {t('checkout.minimumOrderLabel', { amount: formatPrice(restaurant?.minimum_order ?? 0) })}
           </Text>
         )}
 
@@ -505,6 +537,11 @@ export default function CheckoutScreen() {
           )}
         </Pressable>
       </View>
-    </SafeAreaView>
+      <DeliveryAddressModal
+        visible={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+      />
+      </SafeAreaView>
+    </View>
   );
 }

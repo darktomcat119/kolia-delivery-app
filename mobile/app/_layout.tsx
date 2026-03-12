@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import {
@@ -77,6 +78,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
+      <StatusBar style="dark" />
       <StripeProvider publishableKey={ENV.STRIPE_PUBLISHABLE_KEY}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="index" />

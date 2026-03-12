@@ -40,21 +40,32 @@ export function SkeletonLoader({ width, height, borderRadius = 8 }: SkeletonProp
   );
 }
 
+const cardShadow = {
+  borderWidth: 1,
+  borderColor: 'rgba(0,0,0,0.05)' as const,
+  shadowColor: '#1A1A1A',
+  shadowOffset: { width: 0, height: 3 },
+  shadowOpacity: 0.06,
+  shadowRadius: 12,
+  elevation: 4,
+};
+
 export function RestaurantCardSkeleton() {
   return (
     <View
       style={{
         backgroundColor: COLORS.surface,
-        borderRadius: 16,
+        borderRadius: 24,
         overflow: 'hidden',
-        marginBottom: 16,
+        marginBottom: 18,
+        ...cardShadow,
       }}
     >
       <SkeletonLoader width="100%" height={180} borderRadius={0} />
-      <View style={{ padding: 16, gap: 8 }}>
-        <SkeletonLoader width="60%" height={20} />
-        <SkeletonLoader width="30%" height={16} />
-        <SkeletonLoader width="80%" height={14} />
+      <View style={{ padding: 18, gap: 10 }}>
+        <SkeletonLoader width="60%" height={20} borderRadius={10} />
+        <SkeletonLoader width="35%" height={16} borderRadius={8} />
+        <SkeletonLoader width="85%" height={14} borderRadius={7} />
       </View>
     </View>
   );

@@ -2,6 +2,8 @@
   "common": {
     "loading": "A carregar...",
     "error": "Erro",
+    "errorGeneric": "Algo correu mal. Por favor, tente novamente.",
+    "oops": "Ups!",
     "retry": "Tentar novamente",
     "cancel": "Cancelar",
     "save": "Guardar",
@@ -47,7 +49,8 @@
       "nameRequired": "O nome é obrigatório",
       "loginFailed": "Email ou palavra-passe incorretos",
       "signupFailed": "Não foi possível criar a conta. Tente novamente.",
-      "resetFailed": "Não foi possível enviar o email de recuperação."
+      "resetFailed": "Não foi possível enviar o email de recuperação.",
+      "networkError": "Não foi possível contactar o servidor. Se estiver a usar VPN, desligue-a ou permita que esta app contorne a VPN. Caso contrário, verifique a sua ligação à internet."
     }
   },
   "greeting": {
@@ -82,9 +85,12 @@
     "sortBestRated": "Melhor avaliado",
     "sortLowestFee": "Menor taxa",
     "noResults": "Nenhum resultado encontrado",
-    "tryDifferent": "Tente uma pesquisa diferente"
+    "tryDifferent": "Tente uma pesquisa diferente",
+    "resultCount_one": "{{count}} restaurante encontrado",
+    "resultCount_other": "{{count}} restaurantes encontrados"
   },
   "restaurant": {
+    "notFound": "Restaurante não encontrado",
     "reviews": "avaliações",
     "opensAt": "Abre às",
     "closesAt": "Fecha às",
@@ -117,6 +123,8 @@
     "delivery": "Entrega",
     "pickup": "Levantamento",
     "deliveryAddress": "Morada de entrega",
+    "noAddressSet": "Nenhuma morada definida",
+    "setAddress": "Definir morada",
     "changeAddress": "Alterar",
     "pickupAddress": "Morada de levantamento",
     "outsideRadius": "A sua morada está fora da área de entrega. Considere o levantamento.",
@@ -124,7 +132,9 @@
     "payWithCard": "Pagar com cartão",
     "placeOrder": "Fazer Pedido",
     "processing": "A processar...",
-    "paymentFailed": "O pagamento falhou. Tente novamente."
+    "paymentFailed": "O pagamento falhou. Tente novamente.",
+    "minimumOrder": "Pedido mínimo: {{amount}}",
+    "minimumOrderLabel": "Pedido mínimo: {{amount}}"
   },
   "orderConfirmation": {
     "title": "Pedido Confirmado!",
@@ -137,6 +147,7 @@
   },
   "orderTracking": {
     "title": "Pedido",
+    "orderNotFound": "Pedido não encontrado",
     "received": "Recebido",
     "preparing": "A preparar",
     "ready": "Pronto",

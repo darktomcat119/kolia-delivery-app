@@ -46,7 +46,7 @@ export function Input({
           flexDirection: 'row',
           alignItems: 'center',
           height: 52,
-          borderRadius: 12,
+          borderRadius: 14,
           borderWidth: 1,
           borderColor,
           backgroundColor: bgColor,

@@ -1,5 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import i18n from '../../i18n';
 import { COLORS, FONT_FAMILIES, FONT_SIZES, BORDER_RADIUS } from '../../config/constants';
 
 interface Props {
@@ -29,15 +31,14 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: 32,
-            backgroundColor: COLORS.background,
-          }}
-        >
+        <View style={styles.fallback}>
+          <LinearGradient
+            colors={['#FAFAF7', '#F5F3EF', '#F0EDE8']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+          />
+          <View style={styles.fallbackContent}>
           <Text
             style={{
               fontFamily: FONT_FAMILIES.bodySemibold,
@@ -47,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
               textAlign: 'center',
             }}
           >
-            Oops!
+            {i18n.t('common.oops')}
           </Text>
           <Text
             style={{
@@ -58,8 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
               marginBottom: 24,
             }}
           >
-            {this.props.fallbackMessage ??
-              'Something went wrong. Please try again.'}
+            {this.props.fallbackMessage ?? i18n.t('common.errorGeneric')}
           </Text>
           <Pressable
             onPress={this.handleReset}
@@ -77,9 +77,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 color: COLORS.textOnPrimary,
               }}
             >
-              Try Again
+              {i18n.t('common.retry')}
             </Text>
           </Pressable>
+          </View>
         </View>
       );
     }
@@ -87,3 +88,15 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+const styles = StyleSheet.create({
+  fallback: {
+    flex: 1,
+  },
+  fallbackContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+});

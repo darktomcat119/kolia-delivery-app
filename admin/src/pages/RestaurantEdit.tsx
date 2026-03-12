@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 import type { Restaurant, CuisineType } from '../lib/types';
@@ -46,6 +46,10 @@ export function RestaurantEdit() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isNew && id) {
@@ -81,6 +85,21 @@ export function RestaurantEdit() {
         },
       },
     }));
+  };
+
+  const handleImageUpload = async (file: File, type: 'cover' | 'logo') => {
+    if (type === 'cover') setUploadingCover(true);
+    else setUploadingLogo(true);
+    setError('');
+    try {
+      const { url } = await api.uploadRestaurantImage(file, type);
+      updateField(type === 'cover' ? 'image_url' : 'logo_url', url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Échec de l\'upload');
+    } finally {
+      if (type === 'cover') setUploadingCover(false);
+      else setUploadingLogo(false);
+    }
   };
 
   const toggleDayClosed = (day: string) => {
@@ -226,27 +245,76 @@ export function RestaurantEdit() {
               <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Images</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">URL de l'image de couverture</label>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Image de couverture</label>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <input
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleImageUpload(f, 'cover');
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => coverInputRef.current?.click()}
+                      disabled={uploadingCover}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary bg-primary/5 text-primary font-body text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+                    >
+                      {uploadingCover ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {uploadingCover ? 'Upload...' : 'Téléverser une image'}
+                    </button>
+                    <span className="text-xs text-[#9C9690] font-body">ou collez une URL</span>
+                  </div>
                   <input
                     type="url"
                     value={form.image_url ?? ''}
                     onChange={(e) => updateField('image_url', e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    className="mt-2 w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   />
                   {form.image_url && (
-                    <img src={form.image_url} alt="Aperçu" className="mt-2 h-24 w-full object-cover rounded-xl border border-border-light" />
+                    <img src={form.image_url} alt="Aperçu couverture" className="mt-2 h-24 w-full object-cover rounded-xl border border-border-light" />
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">URL du logo</label>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Logo</label>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleImageUpload(f, 'logo');
+                        e.target.value = '';
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary bg-primary/5 text-primary font-body text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
+                    >
+                      {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {uploadingLogo ? 'Upload...' : 'Téléverser un logo'}
+                    </button>
+                    <span className="text-xs text-[#9C9690] font-body">ou collez une URL</span>
+                  </div>
                   <input
                     type="url"
                     value={form.logo_url ?? ''}
                     onChange={(e) => updateField('logo_url', e.target.value)}
                     placeholder="https://..."
-                    className="w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    className="mt-2 w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   />
+                  {form.logo_url && (
+                    <img src={form.logo_url} alt="Aperçu logo" className="mt-2 h-16 w-16 object-contain rounded-xl border border-border-light" />
+                  )}
                 </div>
               </div>
             </div>

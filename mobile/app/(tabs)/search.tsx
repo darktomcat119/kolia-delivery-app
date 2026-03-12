@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { View, Text, TextInput, FlatList, Pressable, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search as SearchIcon } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import { useLocationStore } from '../../src/stores/locationStore';
 import { COLORS, FONT_FAMILIES, BORDER_RADIUS } from '../../src/config/constants';
 import { haversineDistance } from '../../src/utils/haversine';
 import { RestaurantCard } from '../../src/components/home/RestaurantCard';
+import { LuxuryBackground } from '../../src/components/ui/LuxuryBackground';
 import { EmptyState } from '../../src/components/ui/EmptyState';
 import type { Restaurant } from '../../src/types';
 
@@ -19,6 +20,13 @@ export default function SearchScreen() {
   const { latitude, longitude } = useLocationStore();
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('nearest');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchRestaurants();
+    setRefreshing(false);
+  }, [fetchRestaurants]);
 
   useEffect(() => {
     if (restaurants.length === 0) {
@@ -74,7 +82,9 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }} edges={['top']}>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../assets/onboarding/restaurant-interior.jpg')} textureOpacity={0.04} />
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       {/* Header */}
       <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 }}>
         <Text
@@ -162,7 +172,7 @@ export default function SearchScreen() {
       {/* Result count */}
       {query.trim().length > 0 && (
         <Text style={{ paddingHorizontal: 20, marginBottom: 8, fontFamily: FONT_FAMILIES.body, fontSize: 13, color: COLORS.textSecondary }}>
-          {filteredAndSorted.length} restaurant{filteredAndSorted.length !== 1 ? 's' : ''} trouvé{filteredAndSorted.length !== 1 ? 's' : ''}
+          {t('search.resultCount', { count: filteredAndSorted.length })}
         </Text>
       )}
 
@@ -177,13 +187,23 @@ export default function SearchScreen() {
         )}
         ListEmptyComponent={
           <EmptyState
+            image={require('../../assets/onboarding/jollof-restaurant.jpg')}
             title={t('search.noResults')}
             subtitle={t('search.tryDifferent')}
           />
         }
-        contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
+        contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

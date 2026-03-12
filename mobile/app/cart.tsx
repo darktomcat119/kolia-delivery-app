@@ -12,8 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '../src/stores/cartStore';
-import { COLORS, FONT_FAMILIES, SHADOWS, BORDER_RADIUS } from '../src/config/constants';
+import { LuxuryBackground } from '../src/components/ui/LuxuryBackground';
+import { COLORS, FONT_FAMILIES, BORDER_RADIUS } from '../src/config/constants';
 import { formatPrice } from '../src/utils/formatters';
 import { EmptyState } from '../src/components/ui/EmptyState';
 
@@ -44,20 +46,21 @@ export default function CartScreen() {
 
   if (items.length === 0) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-        {/* Header */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderBottomWidth: 1,
-            borderBottomColor: COLORS.borderLight,
-            backgroundColor: COLORS.surface,
-          }}
-        >
-          <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../assets/onboarding/delivery.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: COLORS.borderLight,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+          <Pressable onPress={() => router.back()} style={{ padding: 4 }} accessibilityRole="button" accessibilityLabel={t('common.back')}>
             <ArrowLeft size={24} color={COLORS.textPrimary} />
           </Pressable>
           <Text
@@ -72,60 +75,49 @@ export default function CartScreen() {
           </Text>
         </View>
 
-        <EmptyState
-          title={t('cart.empty')}
-          actionLabel={t('cart.browseRestaurants')}
-          onAction={() => router.replace('/(tabs)/home')}
-        />
-      </SafeAreaView>
+          <EmptyState
+            image={require('../assets/onboarding/delivery.jpg')}
+            title={t('cart.empty')}
+            actionLabel={t('cart.browseRestaurants')}
+            onAction={() => router.replace('/(tabs)/home')}
+          />
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: COLORS.borderLight,
-          backgroundColor: COLORS.surface,
-        }}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
-            <ArrowLeft size={24} color={COLORS.textPrimary} />
-          </Pressable>
-          <View style={{ marginLeft: 12 }}>
-            <Text
-              style={{
-                fontFamily: FONT_FAMILIES.bodySemibold,
-                fontSize: 18,
-                color: COLORS.textPrimary,
-              }}
-            >
-              {t('cart.title')}
-            </Text>
-            <Text
-              style={{
-                fontFamily: FONT_FAMILIES.body,
-                fontSize: 13,
-                color: COLORS.textSecondary,
-              }}
-            >
-              {restaurantName}
-            </Text>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../assets/onboarding/delivery.jpg')} textureOpacity={0.04} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient
+          colors={['rgba(224,122,47,0.08)', 'rgba(27,94,58,0.04)', 'transparent']}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 20,
+            paddingVertical: 14,
+            paddingBottom: 18,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Pressable onPress={() => router.back()} style={{ padding: 4 }} accessibilityRole="button" accessibilityLabel={t('common.back')}>
+              <ArrowLeft size={24} color={COLORS.textPrimary} />
+            </Pressable>
+            <View style={{ marginLeft: 12 }}>
+              <Text style={{ fontFamily: FONT_FAMILIES.bodySemibold, fontSize: 18, color: COLORS.textPrimary }}>
+                {t('cart.title')}
+              </Text>
+              <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 13, color: COLORS.textSecondary }}>
+                {restaurantName}
+              </Text>
+            </View>
           </View>
-        </View>
-
-        <Pressable onPress={handleClearCart} style={{ padding: 4 }}>
-          <Trash2 size={20} color={COLORS.error} />
-        </Pressable>
-      </View>
+          <Pressable onPress={handleClearCart} style={{ padding: 4 }} accessibilityRole="button" accessibilityLabel={t('cart.clearCart')}>
+            <Trash2 size={20} color={COLORS.error} />
+          </Pressable>
+        </LinearGradient>
 
       <ScrollView
         style={{ flex: 1 }}
@@ -133,16 +125,22 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Cart Items */}
-        <View style={{ padding: 20, gap: 12 }}>
+        <View style={{ padding: 20, gap: 14 }}>
           {items.map((item) => (
             <View
               key={item.menu_item_id}
               style={{
                 flexDirection: 'row',
                 backgroundColor: COLORS.surface,
-                borderRadius: BORDER_RADIUS.card,
-                padding: 14,
-                ...SHADOWS.card,
+                borderRadius: 20,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: 'rgba(0,0,0,0.05)',
+                shadowColor: '#1A1A1A',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 10,
+                elevation: 3,
               }}
             >
               {/* Item image */}
@@ -280,7 +278,11 @@ export default function CartScreen() {
           borderTopColor: COLORS.borderLight,
           padding: 20,
           paddingBottom: 36,
-          ...SHADOWS.elevated,
+          shadowColor: '#1A1A1A',
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.1,
+          shadowRadius: 20,
+          elevation: 12,
         }}
       >
         {/* Subtotal */}
@@ -332,6 +334,7 @@ export default function CartScreen() {
           </Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

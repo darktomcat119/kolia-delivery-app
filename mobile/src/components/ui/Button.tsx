@@ -81,9 +81,12 @@ export function Button({
       disabled={isDisabled}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: isDisabled }}
       style={[
         {
-          borderRadius: 12,
+          borderRadius: 14,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',

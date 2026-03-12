@@ -54,14 +54,16 @@ serve({ fetch: app.fetch, port }, () => {
 });
 
 // Best-effort startup signal for common "Supabase unreachable" issues.
+// If using VPN, try split-tunnelling so Supabase traffic bypasses VPN, or set SUPABASE_CONNECTIVITY_TIMEOUT_MS=5000
 setTimeout(async () => {
-  const host = getSupabaseHostFromEnv();
+  const host = getSupabaseHostFromEnv();                                                           
   if (!host) {
     console.warn('[startup] SUPABASE_URL missing/invalid; cannot check connectivity');
     return;
   }
 
-  const result = await checkTcpConnectivity(host, 443, 2000);
+  const timeoutMs = Number(process.env.SUPABASE_CONNECTIVITY_TIMEOUT_MS) || 2000;
+  const result = await checkTcpConnectivity(host, 443, timeoutMs);
   if (result.ok) {
     console.log(`[startup] Supabase TCP OK ${result.host}:443 (${result.latencyMs}ms)`);
   } else {

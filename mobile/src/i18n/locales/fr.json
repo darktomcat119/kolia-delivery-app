@@ -2,6 +2,8 @@
   "common": {
     "loading": "Chargement...",
     "error": "Erreur",
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "oops": "Oups !",
     "retry": "Réessayer",
     "cancel": "Annuler",
     "save": "Enregistrer",
@@ -47,7 +49,8 @@
       "nameRequired": "Le nom est requis",
       "loginFailed": "Email ou mot de passe incorrect",
       "signupFailed": "Impossible de créer le compte. Veuillez réessayer.",
-      "resetFailed": "Impossible d'envoyer l'email de réinitialisation."
+      "resetFailed": "Impossible d'envoyer l'email de réinitialisation.",
+      "networkError": "Impossible de joindre le serveur. Si vous utilisez un VPN, désactivez-le ou autorisez cette app à contourner le VPN. Sinon vérifiez votre connexion internet."
     }
   },
   "greeting": {
@@ -82,9 +85,12 @@
     "sortBestRated": "Mieux noté",
     "sortLowestFee": "Frais les plus bas",
     "noResults": "Aucun résultat trouvé",
-    "tryDifferent": "Essayez une autre recherche"
+    "tryDifferent": "Essayez une autre recherche",
+    "resultCount_one": "{{count}} restaurant trouvé",
+    "resultCount_other": "{{count}} restaurants trouvés"
   },
   "restaurant": {
+    "notFound": "Restaurant introuvable",
     "reviews": "avis",
     "opensAt": "Ouvre à",
     "closesAt": "Ferme à",
@@ -117,6 +123,8 @@
     "delivery": "Livraison",
     "pickup": "À emporter",
     "deliveryAddress": "Adresse de livraison",
+    "noAddressSet": "Aucune adresse renseignée",
+    "setAddress": "Définir l'adresse",
     "changeAddress": "Modifier",
     "pickupAddress": "Adresse de retrait",
     "outsideRadius": "Votre adresse est en dehors de la zone de livraison. Envisagez le retrait.",
@@ -124,7 +132,9 @@
     "payWithCard": "Payer par carte",
     "placeOrder": "Passer la Commande",
     "processing": "Traitement en cours...",
-    "paymentFailed": "Le paiement a échoué. Veuillez réessayer."
+    "paymentFailed": "Le paiement a échoué. Veuillez réessayer.",
+    "minimumOrder": "Minimum de commande : {{amount}}",
+    "minimumOrderLabel": "Minimum de commande : {{amount}}"
   },
   "orderConfirmation": {
     "title": "Commande Confirmée !",
@@ -137,6 +147,7 @@
   },
   "orderTracking": {
     "title": "Commande",
+    "orderNotFound": "Commande introuvable",
     "received": "Reçue",
     "preparing": "En préparation",
     "ready": "Prête",

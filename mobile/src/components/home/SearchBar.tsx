@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, TextInput } from 'react-native';
 import { Search } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { COLORS, FONT_FAMILIES, SHADOWS } from '../../config/constants';
+import { COLORS, FONT_FAMILIES } from '../../config/constants';
 
 const DEBOUNCE_MS = 500;
 
@@ -41,14 +41,18 @@ export function SearchBar({ value, onChangeText, onSubmit }: SearchBarProps) {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.surface,
-        borderRadius: 16,
+        borderRadius: 18,
         borderWidth: 1.5,
         borderColor: focused ? COLORS.primary : COLORS.borderLight,
-        paddingHorizontal: 16,
+        paddingHorizontal: 18,
         marginHorizontal: 20,
         marginBottom: 16,
-        height: 52,
-        ...SHADOWS.card,
+        height: 54,
+        shadowColor: '#1A1A1A',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: focused ? 0.08 : 0.05,
+        shadowRadius: focused ? 12 : 8,
+        elevation: 3,
       }}
     >
       <Search size={20} color={focused ? COLORS.primary : COLORS.textTertiary} />

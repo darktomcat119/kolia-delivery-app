@@ -1,19 +1,23 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
-import { View, Text, FlatList, RefreshControl, Image } from 'react-native';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
+import { View, Text, FlatList, RefreshControl, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { MapPin } from 'lucide-react-native';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useRestaurantStore } from '../../src/stores/restaurantStore';
 import { useLocationStore } from '../../src/stores/locationStore';
-import { COLORS, FONT_FAMILIES, FONT_SIZES } from '../../src/config/constants';
+import { COLORS, FONT_FAMILIES } from '../../src/config/constants';
 import { getTimeGreetingKey } from '../../src/utils/formatters';
 import { haversineDistance } from '../../src/utils/haversine';
 import { RestaurantCard } from '../../src/components/home/RestaurantCard';
 import { CuisineFilter } from '../../src/components/home/CuisineFilter';
 import { SearchBar } from '../../src/components/home/SearchBar';
+import { LuxuryBackground } from '../../src/components/ui/LuxuryBackground';
 import { RestaurantCardSkeleton } from '../../src/components/ui/SkeletonLoader';
 import { EmptyState } from '../../src/components/ui/EmptyState';
+import { DeliveryAddressModal } from '../../src/components/address/DeliveryAddressModal';
 import { getCurrentLocation } from '../../src/services/location';
 import type { Restaurant } from '../../src/types';
 
@@ -36,6 +40,7 @@ export default function HomeScreen() {
     getCurrentLocation();
   }, [fetchRestaurants]);
 
+  const [showAddressModal, setShowAddressModal] = useState(false);
   const filteredRestaurants = getFilteredRestaurants();
   const greetingKey = getTimeGreetingKey();
   const firstName = user?.full_name?.split(' ')[0] ?? '';
@@ -67,59 +72,74 @@ export default function HomeScreen() {
 
   const header = useMemo(() => (
     <View>
-      {/* Header area */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
-        {/* Top row: Logo + Location */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
+      {/* Header with soft gradient strip */}
+      <LinearGradient
+        colors={['rgba(224,122,47,0.06)', 'rgba(27,94,58,0.04)', 'transparent']}
+        style={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20, marginBottom: 4 }}
+      >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <Image
             source={require('../../assets/logo.png')}
             style={{ height: 32, width: 110, resizeMode: 'contain' }}
           />
           {address ? (
-            <View
-              style={{
+            <Pressable
+              onPress={() => setShowAddressModal(true)}
+              style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 4,
-                backgroundColor: COLORS.surface,
+                backgroundColor: pressed ? COLORS.surfaceHover : COLORS.surface,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
                 borderRadius: 20,
                 borderWidth: 1,
                 borderColor: COLORS.borderLight,
-              }}
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 4,
+                elevation: 2,
+              })}
             >
               <MapPin size={14} color={COLORS.primary} />
               <Text
-                style={{
-                  fontFamily: FONT_FAMILIES.bodyMedium,
-                  fontSize: 12,
-                  color: COLORS.textSecondary,
-                  maxWidth: 120,
-                }}
+                style={{ fontFamily: FONT_FAMILIES.bodyMedium, fontSize: 12, color: COLORS.textSecondary, maxWidth: 120 }}
                 numberOfLines={1}
               >
                 {address}
               </Text>
-            </View>
-          ) : null}
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() => setShowAddressModal(true)}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: pressed ? COLORS.surfaceHover : COLORS.surface,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 20,
+                borderWidth: 1,
+                borderColor: COLORS.borderLight,
+              })}
+            >
+              <MapPin size={14} color={COLORS.primary} />
+              <Text style={{ fontFamily: FONT_FAMILIES.bodyMedium, fontSize: 12, color: COLORS.textSecondary }}>
+                {t('checkout.setAddress')}
+              </Text>
+            </Pressable>
+          )}
         </View>
-
-        {/* Greeting */}
         <Text
           style={{
             fontFamily: FONT_FAMILIES.display,
             fontSize: 28,
             color: COLORS.textPrimary,
             lineHeight: 36,
-            marginBottom: 4,
+            marginBottom: 2,
+            letterSpacing: 0.3,
           }}
         >
           {t(greetingKey)}{firstName ? ',' : ''}
@@ -131,35 +151,26 @@ export default function HomeScreen() {
               fontSize: 28,
               color: COLORS.primary,
               lineHeight: 36,
-              marginBottom: 16,
+              letterSpacing: 0.2,
             }}
           >
             {firstName}
           </Text>
-        ) : (
-          <View style={{ marginBottom: 16 }} />
-        )}
-      </View>
+        ) : null}
+      </LinearGradient>
 
-      {/* Search Bar */}
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
+      <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+      <CuisineFilter selected={selectedCuisine} onSelect={setSelectedCuisine} />
 
-      {/* Cuisine Filter */}
-      <CuisineFilter
-        selected={selectedCuisine}
-        onSelect={setSelectedCuisine}
-      />
-
-      {/* Section title */}
-      <View style={{ paddingHorizontal: 20, marginBottom: 4 }}>
+      {/* Section title with accent */}
+      <View style={{ paddingHorizontal: 20, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <View style={{ width: 4, height: 22, borderRadius: 2, backgroundColor: COLORS.primary }} />
         <Text
           style={{
-            fontFamily: FONT_FAMILIES.bodySemibold,
-            fontSize: 18,
+            fontFamily: FONT_FAMILIES.displaySemibold,
+            fontSize: 20,
             color: COLORS.textPrimary,
+            letterSpacing: 0.2,
           }}
         >
           {selectedCuisine ? t('home.filteredResults') : t('home.nearYou')}
@@ -190,18 +201,20 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }} edges={['top']}>
-      <FlatList
-        data={sortedRestaurants}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={{ paddingHorizontal: 20 }}>
-            <RestaurantCard
-              restaurant={item}
-              distanceKm={getDistance(item)}
-            />
-          </View>
-        )}
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../assets/onboarding/jollof-restaurant.jpg')} textureOpacity={0.045} />
+      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+        <FlatList
+          data={sortedRestaurants}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <Animated.View
+              entering={FadeInDown.delay(index * 60).springify().damping(14)}
+              style={{ paddingHorizontal: 20 }}
+            >
+              <RestaurantCard restaurant={item} distanceKm={getDistance(item)} />
+            </Animated.View>
+          )}
         ListHeaderComponent={header}
         ListEmptyComponent={renderEmpty}
         refreshControl={
@@ -212,9 +225,14 @@ export default function HomeScreen() {
             colors={[COLORS.primary]}
           />
         }
-        contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}
+        contentContainerStyle={{ paddingBottom: 100, flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
+        />
+      </SafeAreaView>
+      <DeliveryAddressModal
+        visible={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }

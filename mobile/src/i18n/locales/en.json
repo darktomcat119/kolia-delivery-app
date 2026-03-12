@@ -2,6 +2,8 @@
   "common": {
     "loading": "Loading...",
     "error": "Error",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "oops": "Oops!",
     "retry": "Try again",
     "cancel": "Cancel",
     "save": "Save",
@@ -47,7 +49,8 @@
       "nameRequired": "Name is required",
       "loginFailed": "Incorrect email or password",
       "signupFailed": "Could not create account. Please try again.",
-      "resetFailed": "Could not send reset email."
+      "resetFailed": "Could not send reset email.",
+      "networkError": "Cannot reach the server. If you're using a VPN, turn it off or allow this app to bypass the VPN. Otherwise check your internet connection."
     }
   },
   "greeting": {
@@ -82,9 +85,12 @@
     "sortBestRated": "Best rated",
     "sortLowestFee": "Lowest fee",
     "noResults": "No results found",
-    "tryDifferent": "Try a different search"
+    "tryDifferent": "Try a different search",
+    "resultCount_one": "{{count}} restaurant found",
+    "resultCount_other": "{{count}} restaurants found"
   },
   "restaurant": {
+    "notFound": "Restaurant not found",
     "reviews": "reviews",
     "opensAt": "Opens at",
     "closesAt": "Closes at",
@@ -117,6 +123,8 @@
     "delivery": "Delivery",
     "pickup": "Pickup",
     "deliveryAddress": "Delivery address",
+    "noAddressSet": "No address set",
+    "setAddress": "Set address",
     "changeAddress": "Change",
     "pickupAddress": "Pickup address",
     "outsideRadius": "Your address is outside the delivery area. Consider pickup.",
@@ -124,7 +132,9 @@
     "payWithCard": "Pay with card",
     "placeOrder": "Place Order",
     "processing": "Processing...",
-    "paymentFailed": "Payment failed. Please try again."
+    "paymentFailed": "Payment failed. Please try again.",
+    "minimumOrder": "Minimum order: {{amount}}",
+    "minimumOrderLabel": "Minimum order: {{amount}}"
   },
   "orderConfirmation": {
     "title": "Order Confirmed!",
@@ -137,6 +147,7 @@
   },
   "orderTracking": {
     "title": "Order",
+    "orderNotFound": "Order not found",
     "received": "Received",
     "preparing": "Preparing",
     "ready": "Ready",

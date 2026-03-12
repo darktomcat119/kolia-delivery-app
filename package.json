@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --names \"BACKEND,ADMIN,RESTAURANT,MOBILE\" --prefix-colors \"blue,green,yellow,magenta\" \"npm run dev:backend\" \"npm run dev:admin\" \"npm run dev:restaurant\" \"npm run dev:mobile\"",
+    "dev": "concurrently --names \"BACKEND,ADMIN,RESTAURANT,MOBILE\" --prefix-colors \"blue,green,yellow,magenta\" \"npm run dev:backend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:admin": "cd admin && npm run dev",
     "dev:restaurant": "cd restaurant && npm run dev",

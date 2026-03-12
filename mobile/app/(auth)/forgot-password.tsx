@@ -21,6 +21,8 @@ import {
   forgotPasswordSchema,
   type ForgotPasswordFormData,
 } from '../../src/utils/validation';
+import { LuxuryBackground } from '../../src/components/ui/LuxuryBackground';
+import { FlowingShapes } from '../../src/components/ui/FlowingShapes';
 import { COLORS, FONT_FAMILIES, FONT_SIZES } from '../../src/config/constants';
 
 export default function ForgotPasswordScreen() {
@@ -51,7 +53,10 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../assets/onboarding/jollof-restaurant.jpg')} textureOpacity={0.04} />
+      <FlowingShapes />
+      <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -161,6 +166,7 @@ export default function ForgotPasswordScreen() {
           </Link>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

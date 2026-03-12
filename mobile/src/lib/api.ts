@@ -27,7 +27,9 @@ async function request<T>(
 
   if (!response.ok) {
     const error = json as ApiError;
-    throw new Error(error.error || 'Request failed');
+    const e = new Error(error.error || 'Request failed') as Error & { code?: string };
+    e.code = error.code;
+    throw e;
   }
 
   return json.data as T;

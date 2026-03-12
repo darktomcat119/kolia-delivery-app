@@ -7,8 +7,20 @@ import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../../src/lib/supabase';
 import type { OrderWithItems, OrderStatus } from '../../../src/types';
-import { COLORS, FONT_FAMILIES, SHADOWS, BORDER_RADIUS } from '../../../src/config/constants';
+import { LinearGradient } from 'expo-linear-gradient';
+import { LuxuryBackground } from '../../../src/components/ui/LuxuryBackground';
+import { COLORS, FONT_FAMILIES, BORDER_RADIUS } from '../../../src/config/constants';
 import { formatPrice, formatOrderDate } from '../../../src/utils/formatters';
+
+const cardShadow = {
+  borderWidth: 1,
+  borderColor: 'rgba(0,0,0,0.05)' as const,
+  shadowColor: '#1A1A1A',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.06,
+  shadowRadius: 10,
+  elevation: 3,
+};
 
 const STATUS_STEPS: OrderStatus[] = ['received', 'preparing', 'ready', 'on_the_way', 'completed'];
 
@@ -72,19 +84,25 @@ export default function OrderTrackingScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../../../assets/onboarding/delivery.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   if (!order) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FONT_FAMILIES.body, color: COLORS.textSecondary }}>
-          Order not found
-        </Text>
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../../../assets/onboarding/delivery.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontFamily: FONT_FAMILIES.body, color: COLORS.textSecondary }}>
+            {t('orderTracking.orderNotFound')}
+          </Text>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -93,55 +111,43 @@ export default function OrderTrackingScreen() {
   const restaurant = order.restaurant as { name: string; address: string; phone: string } | undefined;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          borderBottomWidth: 1,
-          borderBottomColor: COLORS.borderLight,
-          backgroundColor: COLORS.surface,
-        }}
-      >
-        <Pressable onPress={() => router.back()} style={{ padding: 4 }}>
-          <ArrowLeft size={24} color={COLORS.textPrimary} />
-        </Pressable>
-        <View style={{ marginLeft: 12 }}>
-          <Text
-            style={{
-              fontFamily: FONT_FAMILIES.bodySemibold,
-              fontSize: 18,
-              color: COLORS.textPrimary,
-            }}
-          >
-            {t('orderTracking.title')} #{order.order_number}
-          </Text>
-          <Text
-            style={{
-              fontFamily: FONT_FAMILIES.body,
-              fontSize: 13,
-              color: COLORS.textSecondary,
-            }}
-          >
-            {formatOrderDate(order.created_at)}
-          </Text>
-        </View>
-      </View>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../../assets/onboarding/delivery.jpg')} textureOpacity={0.04} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <LinearGradient
+          colors={['rgba(224,122,47,0.08)', 'rgba(27,94,58,0.04)', 'transparent']}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingVertical: 14,
+            paddingBottom: 18,
+          }}
+        >
+          <Pressable onPress={() => router.back()} style={{ padding: 4 }} accessibilityRole="button" accessibilityLabel={t('common.back')}>
+            <ArrowLeft size={24} color={COLORS.textPrimary} />
+          </Pressable>
+          <View style={{ marginLeft: 12 }}>
+            <Text style={{ fontFamily: FONT_FAMILIES.bodySemibold, fontSize: 18, color: COLORS.textPrimary }}>
+              {t('orderTracking.title')} #{order.order_number}
+            </Text>
+            <Text style={{ fontFamily: FONT_FAMILIES.body, fontSize: 13, color: COLORS.textSecondary }}>
+              {formatOrderDate(order.created_at)}
+            </Text>
+          </View>
+        </LinearGradient>
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, gap: 20 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 100, gap: 20 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Status tracker */}
         <View
           style={{
             backgroundColor: COLORS.surface,
-            borderRadius: BORDER_RADIUS.card,
+            borderRadius: 22,
             padding: 20,
-            ...SHADOWS.card,
+            ...cardShadow,
           }}
         >
           {isCancelled ? (
@@ -227,9 +233,9 @@ export default function OrderTrackingScreen() {
           <View
             style={{
               backgroundColor: COLORS.surface,
-              borderRadius: BORDER_RADIUS.card,
-              padding: 16,
-              ...SHADOWS.card,
+              borderRadius: 22,
+              padding: 18,
+              ...cardShadow,
             }}
           >
             <Text
@@ -258,9 +264,9 @@ export default function OrderTrackingScreen() {
         <View
           style={{
             backgroundColor: COLORS.surface,
-            borderRadius: BORDER_RADIUS.card,
-            padding: 16,
-            ...SHADOWS.card,
+            borderRadius: 22,
+            padding: 18,
+            ...cardShadow,
           }}
         >
           <Text
@@ -322,7 +328,7 @@ export default function OrderTrackingScreen() {
                 color: COLORS.textPrimary,
               }}
             >
-              Total
+              {t('cart.total')}
             </Text>
             <Text
               style={{
@@ -348,6 +354,7 @@ export default function OrderTrackingScreen() {
           {t('orderTracking.needHelp')}
         </Text>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }

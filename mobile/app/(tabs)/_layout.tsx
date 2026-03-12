@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Platform } from 'react-native';
+import { View, Platform, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
+import { BlurView } from 'expo-blur';
 import { House, Search, ClipboardList, UserCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { COLORS, FONT_FAMILIES } from '../../src/config/constants';
@@ -39,23 +40,31 @@ export default function TabLayout() {
           marginTop: -2,
         },
         tabBarStyle: {
-          backgroundColor: COLORS.surface,
+          position: 'absolute',
           borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 88 : 68,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
           paddingTop: 10,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.06,
-          shadowRadius: 12,
-          elevation: 8,
+          shadowColor: '#1A1A1A',
+          shadowOffset: { width: 0, height: -6 },
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          elevation: 12,
+          backgroundColor: 'transparent',
         },
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <BlurView tint="light" intensity={70} style={StyleSheet.absoluteFill} />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.96)' }]} />
+          ),
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={House} color={color} focused={focused} />
           ),
@@ -65,6 +74,7 @@ export default function TabLayout() {
         name="search"
         options={{
           title: t('search.title'),
+          tabBarAccessibilityLabel: t('search.title'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={Search} color={color} focused={focused} />
           ),
@@ -74,6 +84,7 @@ export default function TabLayout() {
         name="orders"
         options={{
           title: t('orders.title'),
+          tabBarAccessibilityLabel: t('orders.title'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={ClipboardList} color={color} focused={focused} />
           ),
@@ -83,6 +94,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: t('profile.title'),
+          tabBarAccessibilityLabel: t('profile.title'),
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={UserCircle} color={color} focused={focused} />
           ),

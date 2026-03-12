@@ -6,7 +6,9 @@ import { CheckCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../../src/lib/supabase';
 import type { OrderWithItems } from '../../../src/types';
-import { COLORS, FONT_FAMILIES, BORDER_RADIUS, SHADOWS } from '../../../src/config/constants';
+import { LuxuryBackground } from '../../../src/components/ui/LuxuryBackground';
+import { FlowingShapes } from '../../../src/components/ui/FlowingShapes';
+import { COLORS, FONT_FAMILIES, BORDER_RADIUS } from '../../../src/config/constants';
 import { Button } from '../../../src/components/ui/Button';
 
 export default function OrderConfirmationScreen() {
@@ -37,14 +39,20 @@ export default function OrderConfirmationScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </SafeAreaView>
+      <View style={{ flex: 1 }}>
+        <LuxuryBackground textureImage={require('../../../assets/onboarding/african-cuisine.jpg')} textureOpacity={0.04} />
+        <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1 }}>
+      <LuxuryBackground textureImage={require('../../../assets/onboarding/african-cuisine.jpg')} textureOpacity={0.04} />
+      <FlowingShapes />
+      <SafeAreaView style={{ flex: 1 }}>
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
         {/* Success icon */}
         <View
@@ -95,10 +103,16 @@ export default function OrderConfirmationScreen() {
         <View
           style={{
             backgroundColor: COLORS.surface,
-            borderRadius: BORDER_RADIUS.card,
+            borderRadius: 22,
             padding: 20,
             width: '100%',
-            ...SHADOWS.card,
+            borderWidth: 1,
+            borderColor: 'rgba(0,0,0,0.05)',
+            shadowColor: '#1A1A1A',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.06,
+            shadowRadius: 10,
+            elevation: 3,
           }}
         >
           {order?.order_number && (
@@ -138,6 +152,7 @@ export default function OrderConfirmationScreen() {
           />
         </View>
       </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
