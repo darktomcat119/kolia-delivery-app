@@ -216,7 +216,7 @@ admin.post('/upload/restaurant-image', async (c) => {
   try {
     const body = await c.req.parseBody();
     const file = body['file'];
-    const type = (body['type'] as string) || 'cover'; // 'cover' | 'logo'
+    const type = (body['type'] as string) || 'cover'; // 'cover' | 'logo' | 'gallery'
 
     if (!file || typeof file === 'string') {
       return c.json({ error: 'Missing file', code: 'VALIDATION_ERROR' }, 400);

@@ -54,6 +54,7 @@ export const createRestaurantSchema = z.object({
   phone: z.string().optional(),
   image_url: z.string().url().optional(),
   logo_url: z.string().url().optional(),
+  gallery_urls: z.array(z.string().url()).optional(),
   opening_hours: z.record(z.any()).optional(),
   delivery_fee: z.number().min(0).optional(),
   minimum_order: z.number().min(0).optional(),

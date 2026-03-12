@@ -273,12 +273,28 @@ export default function RestaurantDetailScreen() {
           </SafeAreaView>
         </View>
 
+        {/* Gallery strip (sub images) */}
+        {restaurant.gallery_urls && restaurant.gallery_urls.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 }}
+            style={{ marginBottom: -16 }}
+          >
+            {restaurant.gallery_urls.map((uri, index) => (
+              <View key={`${uri}-${index}`} style={{ width: 100, height: 100, marginRight: 10, borderRadius: 12, overflow: 'hidden', backgroundColor: COLORS.borderLight }}>
+                <Image source={{ uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
+              </View>
+            ))}
+          </ScrollView>
+        )}
+
         {/* Restaurant Info */}
         <View
           style={{
             backgroundColor: COLORS.surface,
             padding: 22,
-            marginTop: -24,
+            marginTop: restaurant.gallery_urls?.length ? 0 : -24,
             borderTopLeftRadius: 28,
             borderTopRightRadius: 28,
             borderWidth: 1,

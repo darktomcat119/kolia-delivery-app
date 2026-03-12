@@ -64,7 +64,7 @@ export const api = {
     request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) =>
     request<T>(path, { method: 'DELETE' }),
-  uploadRestaurantImage: (file: File, type: 'cover' | 'logo') => {
+  uploadRestaurantImage: (file: File, type: 'cover' | 'logo' | 'gallery') => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);

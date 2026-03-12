@@ -39,6 +39,7 @@ export interface Restaurant {
   phone: string | null;
   image_url: string | null;
   logo_url: string | null;
+  gallery_urls?: string[];
   opening_hours: Record<string, { open: string; close: string } | null>;
   delivery_fee: number;
   minimum_order: number;

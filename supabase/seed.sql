@@ -362,6 +362,21 @@ UPDATE public.restaurants SET
 WHERE id = '88888888-8888-8888-8888-888888888888';  -- Dakar Grenoble
 
 -- ============================================
+-- RESTAURANT GALLERY (sub images) — optional
+-- Requires migration 20250310000000_restaurant_gallery_urls.sql
+-- ============================================
+UPDATE public.restaurants SET gallery_urls = '[
+  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80",
+  "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&q=80",
+  "https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=600&q=80"
+]'::jsonb WHERE id = '11111111-1111-1111-1111-111111111111';
+
+UPDATE public.restaurants SET gallery_urls = '[
+  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80",
+  "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=600&q=80"
+]'::jsonb WHERE id = '22222222-2222-2222-2222-222222222222';
+
+-- ============================================
 -- MENU ITEM IMAGES (signature dishes only)
 -- ============================================
 -- Restaurant 1 — Sabores de Luanda

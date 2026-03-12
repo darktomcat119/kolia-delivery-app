@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, X, AlertTriangle, UtensilsCrossed, Pencil, Menu } from 'lucide-react';
+import { Plus, X, AlertTriangle, UtensilsCrossed, Pencil, Menu, Images } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 import type { Restaurant } from '../lib/types';
@@ -167,11 +167,17 @@ export function Restaurants() {
                   {restaurant.is_active ? 'Actif' : 'Inactif'}
                 </button>
 
-                {/* City chip */}
-                <div className="absolute bottom-3 left-3">
+                {/* City chip + gallery badge */}
+                <div className="absolute bottom-3 left-3 flex items-center gap-2">
                   <span className="px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/90 text-xs font-body">
                     {restaurant.city}
                   </span>
+                  {restaurant.gallery_urls && restaurant.gallery_urls.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white/90 text-xs font-body" title="Galerie">
+                      <Images size={12} />
+                      {restaurant.gallery_urls.length}
+                    </span>
+                  )}
                 </div>
               </div>
 

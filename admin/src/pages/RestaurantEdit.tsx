@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Upload, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { api } from '../lib/api';
 import type { Restaurant, CuisineType } from '../lib/types';
@@ -25,6 +25,7 @@ const EMPTY_RESTAURANT: Partial<Restaurant> = {
   phone: '',
   image_url: '',
   logo_url: '',
+  gallery_urls: [],
   delivery_fee: 3.5,
   minimum_order: 12,
   estimated_delivery_min: 30,
@@ -48,8 +49,14 @@ export function RestaurantEdit() {
   const [error, setError] = useState('');
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [dragCover, setDragCover] = useState(false);
+  const [dragLogo, setDragLogo] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [dragGallery, setDragGallery] = useState(false);
+  const [galleryUrlInput, setGalleryUrlInput] = useState('');
   const coverInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isNew && id) {
@@ -60,7 +67,9 @@ export function RestaurantEdit() {
         .single()
         .then(({ data, error }) => {
           if (data && !error) {
-            setForm(data as Restaurant);
+            const row = data as Record<string, unknown>;
+            const gallery_urls = Array.isArray(row.gallery_urls) ? row.gallery_urls as string[] : [];
+            setForm({ ...row, gallery_urls } as Restaurant);
           }
           setLoading(false);
         });
@@ -87,19 +96,80 @@ export function RestaurantEdit() {
     }));
   };
 
-  const handleImageUpload = async (file: File, type: 'cover' | 'logo') => {
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const handleImageUpload = async (file: File, type: 'cover' | 'logo' | 'gallery') => {
+    if (!file || !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setError('Format accepté : JPEG, PNG ou WebP');
+      return;
+    }
     if (type === 'cover') setUploadingCover(true);
-    else setUploadingLogo(true);
+    else if (type === 'logo') setUploadingLogo(true);
+    else setUploadingGallery(true);
     setError('');
     try {
       const { url } = await api.uploadRestaurantImage(file, type);
-      updateField(type === 'cover' ? 'image_url' : 'logo_url', url);
+      if (type === 'gallery') {
+        setForm((prev) => ({
+          ...prev,
+          gallery_urls: [...(prev.gallery_urls ?? []), url],
+        }));
+      } else {
+        updateField(type === 'cover' ? 'image_url' : 'logo_url', url);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Échec de l\'upload');
     } finally {
       if (type === 'cover') setUploadingCover(false);
-      else setUploadingLogo(false);
+      else if (type === 'logo') setUploadingLogo(false);
+      else setUploadingGallery(false);
     }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      gallery_urls: (prev.gallery_urls ?? []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const addGalleryUrl = () => {
+    const url = galleryUrlInput.trim();
+    if (!url) return;
+    try {
+      new URL(url);
+      setForm((prev) => ({
+        ...prev,
+        gallery_urls: [...(prev.gallery_urls ?? []), url],
+      }));
+      setGalleryUrlInput('');
+      setError('');
+    } catch {
+      setError('URL invalide');
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, type: 'cover' | 'logo' | 'gallery') => {
+    e.preventDefault();
+    if (type === 'cover') setDragCover(false);
+    else if (type === 'logo') setDragLogo(false);
+    else setDragGallery(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleImageUpload(file, type);
+  };
+
+  const handleDragOver = (e: React.DragEvent, type: 'cover' | 'logo' | 'gallery') => {
+    e.preventDefault();
+    if (type === 'cover') setDragCover(true);
+    else if (type === 'logo') setDragLogo(true);
+    else setDragGallery(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent, type: 'cover' | 'logo' | 'gallery') => {
+    e.preventDefault();
+    if (type === 'cover') setDragCover(false);
+    else if (type === 'logo') setDragLogo(false);
+    else setDragGallery(false);
   };
 
   const toggleDayClosed = (day: string) => {
@@ -240,81 +310,170 @@ export function RestaurantEdit() {
               </div>
             </div>
 
-            {/* Images */}
+            {/* Images — upload (main cover + logo) or paste URL */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
-              <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-4">Images</h2>
-              <div className="space-y-4">
+              <h2 className="text-base font-semibold font-body text-[#1A1A1A] mb-1">Images</h2>
+              <p className="text-xs text-[#9C9690] font-body mb-4">Téléversez une image de couverture et un logo, ou collez une URL.</p>
+              <div className="space-y-6">
+                {/* Cover image */}
                 <div>
-                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Image de couverture</label>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <input
-                      ref={coverInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleImageUpload(f, 'cover');
-                        e.target.value = '';
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => coverInputRef.current?.click()}
-                      disabled={uploadingCover}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary bg-primary/5 text-primary font-body text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
-                    >
-                      {uploadingCover ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                      {uploadingCover ? 'Upload...' : 'Téléverser une image'}
-                    </button>
-                    <span className="text-xs text-[#9C9690] font-body">ou collez une URL</span>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-2">Image de couverture (principale)</label>
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleImageUpload(f, 'cover');
+                      e.target.value = '';
+                    }}
+                  />
+                  <div
+                    onDrop={(e) => handleDrop(e, 'cover')}
+                    onDragOver={(e) => handleDragOver(e, 'cover')}
+                    onDragLeave={(e) => handleDragLeave(e, 'cover')}
+                    onClick={() => coverInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${dragCover ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/60 hover:bg-[#FAFAF7]'}`}
+                  >
+                    {uploadingCover ? (
+                      <div className="flex items-center justify-center gap-2 text-primary font-body text-sm">
+                        <Loader2 size={20} className="animate-spin" />
+                        <span>Upload en cours…</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={28} className="mx-auto text-[#9C9690] mb-2" />
+                        <p className="text-sm font-body text-[#6B6560]">Cliquez ou glissez-déposez une image (JPEG, PNG, WebP — max 5 Mo)</p>
+                      </>
+                    )}
                   </div>
+                  {form.image_url && (
+                    <img src={form.image_url} alt="Aperçu couverture" className="mt-3 h-28 w-full object-cover rounded-xl border border-border-light" />
+                  )}
+                  <p className="text-xs text-[#9C9690] font-body mt-2">Ou URL de l&apos;image de couverture</p>
                   <input
                     type="url"
                     value={form.image_url ?? ''}
                     onChange={(e) => updateField('image_url', e.target.value)}
                     placeholder="https://..."
-                    className="mt-2 w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   />
-                  {form.image_url && (
-                    <img src={form.image_url} alt="Aperçu couverture" className="mt-2 h-24 w-full object-cover rounded-xl border border-border-light" />
-                  )}
                 </div>
+
+                {/* Logo */}
                 <div>
-                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-1.5">Logo</label>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    <input
-                      ref={logoInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleImageUpload(f, 'logo');
-                        e.target.value = '';
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => logoInputRef.current?.click()}
-                      disabled={uploadingLogo}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-primary bg-primary/5 text-primary font-body text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50"
-                    >
-                      {uploadingLogo ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                      {uploadingLogo ? 'Upload...' : 'Téléverser un logo'}
-                    </button>
-                    <span className="text-xs text-[#9C9690] font-body">ou collez une URL</span>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-2">Logo</label>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleImageUpload(f, 'logo');
+                      e.target.value = '';
+                    }}
+                  />
+                  <div
+                    onDrop={(e) => handleDrop(e, 'logo')}
+                    onDragOver={(e) => handleDragOver(e, 'logo')}
+                    onDragLeave={(e) => handleDragLeave(e, 'logo')}
+                    onClick={() => logoInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${dragLogo ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/60 hover:bg-[#FAFAF7]'}`}
+                  >
+                    {uploadingLogo ? (
+                      <div className="flex items-center justify-center gap-2 text-primary font-body text-sm">
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Upload en cours…</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={24} className="mx-auto text-[#9C9690] mb-1.5" />
+                        <p className="text-sm font-body text-[#6B6560]">Cliquez ou glissez-déposez un logo (JPEG, PNG, WebP — max 5 Mo)</p>
+                      </>
+                    )}
                   </div>
+                  {form.logo_url && (
+                    <img src={form.logo_url} alt="Aperçu logo" className="mt-3 h-20 w-20 object-contain rounded-xl border border-border-light" />
+                  )}
+                  <p className="text-xs text-[#9C9690] font-body mt-2">Ou URL du logo</p>
                   <input
                     type="url"
                     value={form.logo_url ?? ''}
                     onChange={(e) => updateField('logo_url', e.target.value)}
                     placeholder="https://..."
-                    className="mt-2 w-full px-4 py-3 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                   />
-                  {form.logo_url && (
-                    <img src={form.logo_url} alt="Aperçu logo" className="mt-2 h-16 w-16 object-contain rounded-xl border border-border-light" />
-                  )}
+                </div>
+
+                {/* Gallery / sub images */}
+                <div>
+                  <label className="block text-sm font-medium text-[#6B6560] font-body mb-2">Images supplémentaires (galerie)</label>
+                  <div className="flex flex-wrap gap-3 mb-3">
+                    {(form.gallery_urls ?? []).map((url, index) => (
+                      <div key={`${url}-${index}`} className="relative group">
+                        <img src={url} alt="" className="h-20 w-20 object-cover rounded-xl border border-border-light" />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryImage(index)}
+                          className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-90 hover:opacity-100 shadow"
+                          aria-label="Supprimer"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleImageUpload(f, 'gallery');
+                      e.target.value = '';
+                    }}
+                  />
+                  <div
+                    onDrop={(e) => handleDrop(e, 'gallery')}
+                    onDragOver={(e) => handleDragOver(e, 'gallery')}
+                    onDragLeave={(e) => handleDragLeave(e, 'gallery')}
+                    onClick={() => galleryInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${dragGallery ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/60 hover:bg-[#FAFAF7]'}`}
+                  >
+                    {uploadingGallery ? (
+                      <div className="flex items-center justify-center gap-2 text-primary font-body text-sm">
+                        <Loader2 size={18} className="animate-spin" />
+                        <span>Upload en cours…</span>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={22} className="mx-auto text-[#9C9690] mb-1" />
+                        <p className="text-sm font-body text-[#6B6560]">Ajouter une image (glisser-déposer ou clic)</p>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#9C9690] font-body mt-2">Ou ajouter par URL</p>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="url"
+                      value={galleryUrlInput}
+                      onChange={(e) => setGalleryUrlInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addGalleryUrl())}
+                      placeholder="https://..."
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-border font-body text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={addGalleryUrl}
+                      disabled={!galleryUrlInput.trim()}
+                      className="px-4 py-2.5 rounded-xl border border-primary bg-primary/5 text-primary font-body text-sm font-medium hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Ajouter
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

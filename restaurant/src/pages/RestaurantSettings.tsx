@@ -202,6 +202,39 @@ export function RestaurantSettings() {
           </div>
         </div>
 
+        {/* Images (read-only — managed in admin) */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
+          <h2 className="text-base font-semibold font-body mb-1">Images</h2>
+          <p className="text-xs text-[#9C9690] font-body mb-4">Image de couverture, logo et galerie sont gérés dans l’interface d’administration.</p>
+          <div className="flex flex-wrap items-start gap-4">
+            {restaurant.image_url && (
+              <div>
+                <p className="text-xs font-medium text-[#6B6560] font-body mb-1.5">Couverture</p>
+                <img src={restaurant.image_url} alt="Couverture" className="h-20 w-32 object-cover rounded-xl border border-border-light" />
+              </div>
+            )}
+            {restaurant.logo_url && (
+              <div>
+                <p className="text-xs font-medium text-[#6B6560] font-body mb-1.5">Logo</p>
+                <img src={restaurant.logo_url} alt="Logo" className="h-16 w-16 object-contain rounded-xl border border-border-light" />
+              </div>
+            )}
+            {restaurant.gallery_urls && restaurant.gallery_urls.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-[#6B6560] font-body mb-1.5">Galerie</p>
+                <div className="flex flex-wrap gap-2">
+                  {restaurant.gallery_urls.map((url, i) => (
+                    <img key={`${url}-${i}`} src={url} alt="" className="h-14 w-14 object-cover rounded-lg border border-border-light" />
+                  ))}
+                </div>
+              </div>
+            )}
+            {!restaurant.image_url && !restaurant.logo_url && (!restaurant.gallery_urls || restaurant.gallery_urls.length === 0) && (
+              <p className="text-sm text-[#9C9690] font-body">Aucune image configurée.</p>
+            )}
+          </div>
+        </div>
+
         {/* Location */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-border-light">
           <h2 className="text-base font-semibold font-body mb-4">Adresse & Contact</h2>
